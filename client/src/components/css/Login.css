@@ -1,0 +1,75 @@
+@keyframes fadeIn {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+}
+@keyframes sweepDown {
+  0% {
+      transform: translateY(-100%);
+      opacity: 0;
+  }
+  100% {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+.animated-image {
+  animation: fadeIn 2s;
+}
+
+.google-btn, .facebook-btn {
+  width: 200px;
+  height: 40px; 
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  animation: sweepDown 2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.google-btn:hover, .facebook-btn:hover {
+  transform: scale(1.05); /* scale up the button a bit */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* add a shadow */
+  cursor: pointer;
+}
+
+.google-btn:active, .facebook-btn:active {
+  transform: scale(0.95); /* scale down the button a bit */
+  
+}
+
+.google-btn svg {
+  width: 40px; 
+  height: 40px; 
+  margin-right: 10px;
+}
+
+.facebook-btn svg {
+  width: 50px; 
+  height: 50px; 
+  margin-right: 10px;
+}
+
+.google-btn {
+  background-color: #4285F4;
+}
+
+.facebook-btn {
+  background-color: #3B5998;
+}
+
+.button-container {
+display: flex;
+justify-content: space-between;
+width: 300px; 
+}
+
+.or-text {
+align-self: center;
+padding:  10px;
+color: aliceblue;
+}
