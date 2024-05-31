@@ -5,6 +5,7 @@ import store from "./redux/store";
 
 import Login from "./components/Login";
 import Home from "./components/Home";
+import Profile from "./components/Profile";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>
     </Provider>

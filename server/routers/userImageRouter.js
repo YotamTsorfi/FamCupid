@@ -23,32 +23,38 @@ const s3 = new S3Client({
   region: process.env.AWS_BUCKET_REGION,
 });
 
-//localhost:3000/upload/
-router.get("/", ensureAuthenticated, async (req, res) => {
+//localhost:3001/user-images/:userId
+router.get("/:userId", async (req, res) => {
   try {
-    const user = await userBL.getUserById(req.user.id);
-
-    if (user.imageUrl) {
-      const getObjectParams = {
-        Bucket: process.env.AWS_BUCKET_NAME,
-        Key: user.imageUrl,
-        // Key: user.imageUrl.split("/").slice(-1)[0],
-      };
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command, { expiresIn: 60 });
-
-      user.imageUrl = url;
-      res.send(user.imageUrl);
-    } else {
-      res.status(404).send("User image is not set");
+    const user = await userBL.getUserById(req.params.userId);
+    if (!user) {
+      return res.status(404).send("User not found");
     }
+
+    const images = await Promise.all(
+      user.photosUrls.map(async (imageUrl) => {
+        const params = {
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: imageUrl,
+          Expires: 60 * 60, // URL will be valid for 1 hour
+        };
+
+        const command = new GetObjectCommand(params);
+        const url = await getSignedUrl(s3, command, {
+          expiresIn: params.Expires,
+        });
+        return url;
+      })
+    );
+
+    res.status(200).send(images);
   } catch (err) {
-    console.log("Error getting signed URL: ", err);
-    res.status(500).send("Error getting signed URL");
+    console.error(err);
+    res.status(500).send(err);
   }
 });
 
-//localhost:3000/upload/
+//localhost:3001/user-images
 router.post(
   "/",
   ensureAuthenticated,
@@ -57,6 +63,7 @@ router.post(
     try {
       console.log("req.body: ", req.body);
       console.log("req.file: ", req.file);
+      console.log("req.user.id: ", req.user.id);
 
       //resize the image
       const buffer = await sharp(req.file.buffer)
@@ -67,7 +74,7 @@ router.post(
 
       const params = {
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: file.originalname,
+        Key: `${req.user.id}/${file.originalname}`,
         Body: buffer,
         ContentType: file.mimetype,
       };
@@ -75,11 +82,25 @@ router.post(
       const command = new PutObjectCommand(params);
       await s3.send(command);
 
-      //const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_BUCKET_REGION}.amazonaws.com/${file.originalname}`;
-      const imageKey = file.originalname;
-      await userBL.setUserImage(req.user.id, imageKey);
+      const user = await userBL.getUserById(req.user.id);
+      user.photosUrls.push(params.Key);
+      await user.save();
 
-      res.send("File uploaded successfully");
+      const urlParams = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: params.Key,
+        Expires: 60 * 60, // URL valid for 1 hour
+      };
+
+      const signedUrl = await getSignedUrl(
+        s3,
+        new GetObjectCommand(urlParams),
+        { expiresIn: urlParams.Expires }
+      );
+
+      res.send({ message: "File uploaded successfully", imageUrl: signedUrl });
+
+      //res.send("File uploaded successfully");
     } catch (err) {
       console.error("Error in POST /upload: ", err);
       res.status(500).send("Internal server error");
@@ -87,7 +108,7 @@ router.post(
   }
 );
 
-//localhost:3000/upload/:id
+//localhost:3001/user-images/:id
 router.delete("/:id", ensureAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;

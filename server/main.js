@@ -14,10 +14,10 @@ const socketController = require("./controllers/socketController");
 //Routers
 const userRouter = require("./routers/userRouter");
 const authRouter = require("./routers/authRouter");
-const uploadRouter = require("./routers/uploadRouter");
+const userImageRouter = require("./routers/userImageRouter");
 
 const app = express();
-app.use(cors());
+
 app.use(cookieParser());
 //app.use(morgan("combined"));
 const port = process.env.PORT || 3001;
@@ -41,7 +41,7 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, "../client/dist")));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
-app.use("/upload", uploadRouter);
+app.use("/user-images", userImageRouter);
 const http = require("http").createServer(app);
 socketController(http);
 

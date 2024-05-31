@@ -5,6 +5,7 @@ const initialState = {
   userId: null,
   username: null,
   photoUrl: null,
+  bio: null,
   error: null,
 };
 
@@ -17,6 +18,7 @@ export const userSlice = createSlice({
       state.userId = action.payload.userId;
       state.username = action.payload.username;
       state.photoUrl = action.payload.photoUrl;
+      state.bio = action.payload.bio;
       state.error = null;
     },
     logout: (state) => {
@@ -24,6 +26,7 @@ export const userSlice = createSlice({
       state.userId = null;
       state.username = null;
       state.photoUrl = null;
+      state.bio = null;
       state.error = null;
     },
     setError: (state, action) => {
@@ -39,6 +42,7 @@ export const selectToken = (state) => state.user.token;
 export const selectUserId = (state) => state.user.userId;
 export const selectUsername = (state) => state.user.username;
 export const selectPhotoUrl = (state) => state.user.photoUrl;
+export const selectBio = (state) => state.user.bio;
 export const selectError = (state) => state.user.error;
 
 export default userSlice.reducer;

@@ -22,4 +22,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+//http://localhost:3000/users/:id/bio
+router.put("/:id/bio", async (req, res) => {
+  try {
+    const user = await userBL.setUserBio(req.params.id, req.body.bio);
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 module.exports = router;

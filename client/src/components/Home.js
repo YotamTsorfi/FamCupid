@@ -3,16 +3,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  selectUserId,
   selectUsername,
   selectPhotoUrl,
   login,
 } from "../redux/slices/userSlice";
 import "./css/Home.css";
-
-import { socket, sendPrivateMessage } from "../services/socket.js";
-
-//    TODO: use .env for the URL's
 
 function Home() {
   const dispatch = useDispatch();
@@ -22,40 +17,6 @@ function Home() {
 
   const username = useSelector(selectUsername);
   const photoUrl = useSelector(selectPhotoUrl);
-  const userId = useSelector(selectUserId);
-
-  const [users, setUsers] = useState([]);
-  const [connectionError, setConnectionError] = useState(null);
-
-  useEffect(() => {
-    socket.on("users", (users) => {
-      setUsers(users);
-    });
-
-    socket.on("connect_error", (err) => {
-      setConnectionError(err);
-    });
-
-    socket.on("private message", ({ senderId, message }) => {
-      console.log(`Received private message from ${senderId}: ${message}`);
-    });
-
-    socket.emit("login", username);
-
-    // Assuming recipient and message are defined
-    const recipient = userId;
-    const message = "Hello, this is a private message";
-
-    // Call the function
-    sendPrivateMessage(recipient, message);
-
-    // Make sure to clean up event listeners on unmount
-    return () => {
-      socket.off("users");
-      socket.off("connect_error");
-      socket.off("private message");
-    };
-  }, [username]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -72,6 +33,8 @@ function Home() {
             userId: response.data.userId,
             username: response.data.username,
             photoUrl: response.data.photoUrl,
+            token: response.data.token,
+            bio: response.data.bio,
           })
         );
         setLoading(false);
@@ -86,6 +49,7 @@ function Home() {
     return <div>Loading...</div>;
   }
 
+  // Logout function
   const handleLogout = () => {
     axios
       .get(`${process.env.REACT_APP_SOCKET_SERVER}/auth/logout`, {
@@ -100,30 +64,29 @@ function Home() {
       });
   };
 
+  const handleProfileRedirect = () => {
+    navigate("/profile");
+  };
+
   return (
-    <div>
-      {isLoggedIn && (
-        <button onClick={handleLogout} className="logout-button">
-          Logout
+    <div className="home">
+      <h1 className="home__welcome">Welcome, {username}!</h1>
+      <div className="profile-card">
+        <img className="profile-card__photo" src={photoUrl} alt={username} />
+        <h2 className="profile-card__name">{username}</h2>
+        <p className="profile-card__bio">Bio goes here...</p>
+        <button className="button" onClick={handleProfileRedirect}>
+          View Profile
         </button>
-      )}
-      <h1>Welcome, {username}!</h1>
-      <p>User ID: {userId}</p>
-      {isLoggedIn && <img src={photoUrl} alt="Profile" />}
-      <br />
 
-      {/* Display users */}
-      {users.map((user, index) => (
-        <div key={index}>{user.username}</div>
-      ))}
+        <br />
 
-      {/* Display connection error */}
-      {connectionError && <div>Error: {connectionError}</div>}
-
-      {/* Send private message on button click */}
-      {/* <button onClick={() => sendPrivateMessage("recipientId", "Hello!")}>
-        Send Message
-      </button> */}
+        {isLoggedIn && (
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        )}
+      </div>
     </div>
   );
 }

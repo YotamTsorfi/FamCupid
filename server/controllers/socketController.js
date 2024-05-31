@@ -33,6 +33,11 @@ function socketController(server) {
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
+    socket.on("send_nice_message", (data) => {
+      //console.log(`Received message: ${data.message}`);
+      socket.broadcast.emit("received_message", data);
+    });
+
     // Uncomment and implement the following event handlers as needed
 
     // socket.on("login", (user) => {

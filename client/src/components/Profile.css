@@ -1,0 +1,49 @@
+.my-custom-tabs {
+    display: flex;
+    justify-content: space-around;
+    list-style: none;
+    padding: 0;
+    border-bottom: 2px solid #ccc;
+  }
+  
+  .my-custom-tabs .nav-item {
+    flex-grow: 1;
+    text-align: center;
+    margin-bottom: -2px;
+  }
+  
+  .my-custom-tabs .nav-link {
+    display: block;
+    padding: 0.5em 1em;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 0.5em 0.5em 0 0;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .my-custom-tabs .nav-link.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+  }
+
+
+  .profile-photo {
+    width: 100px;
+    /* remove the fixed height */
+    object-fit: cover;
+    border-radius: 5px;
+    margin: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .profile-photo:hover {
+    transform: scale(1.1);
+  }
+  
+
+  

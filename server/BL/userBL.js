@@ -30,6 +30,10 @@ const setUserImage = (id, imageUrl) => {
   return UserModel.findByIdAndUpdate(id, { imageUrl: imageUrl });
 };
 
+const setUserBio = (id, bio) => {
+  return UserModel.findByIdAndUpdate(id, { bio: bio });
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -38,4 +42,5 @@ module.exports = {
   setUserRefreshToken,
   getUserByRefreshToken,
   setUserImage,
+  setUserBio,
 };

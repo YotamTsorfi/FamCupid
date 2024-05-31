@@ -7,7 +7,8 @@ const UserSchema = new mongoose.Schema({
   provider: { type: String, required: true }, // 'local', 'google', or 'facebook'
   providerId: { type: String, unique: true }, // unique ID from the provider
   photoUrl: { type: String },
-  bio: String,
+  photosUrls: [String],
+  bio: { type: String },
   likes: [String],
   dislikes: [String],
   matches: [String],
