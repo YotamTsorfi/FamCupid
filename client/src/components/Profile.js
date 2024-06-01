@@ -13,7 +13,7 @@ import {
   selectBio,
   login,
 } from "../redux/slices/userSlice";
-import "./Profile.css";
+import "./css/Profile.css";
 
 Modal.setAppElement("#root");
 
@@ -53,7 +53,7 @@ const Profile = React.memo(function Profile() {
       .catch((error) => {
         navigate("/login");
       });
-  }, []);
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     if (userId) {
@@ -64,7 +64,7 @@ const Profile = React.memo(function Profile() {
         })
         .catch(console.error);
     }
-  }, []);
+  }, [userId]);
 
   const handleBioSave = async () => {
     try {
@@ -102,8 +102,7 @@ const Profile = React.memo(function Profile() {
       case "details":
         return (
           <>
-            <h2>User Details</h2>
-            <p>Username: {username}</p>
+            <h1>{username}</h1>
             <p>User ID: {userId}</p>
 
             <div>
@@ -113,7 +112,7 @@ const Profile = React.memo(function Profile() {
                 onChange={(e) => setUserBio(e.target.value)}
               />
               <br />
-              <button onClick={handleBioSave}>Save</button>
+              <button onClick={handleBioSave}>Update</button>
             </div>
           </>
         );
@@ -146,6 +145,9 @@ const Profile = React.memo(function Profile() {
             >
               <img src={selectedImage} alt="Selected" />
               <button onClick={() => setIsModalOpen(false)}>Close</button>
+              <button onClick={() => handleFileDelete(selectedImage)}>
+                Delete
+              </button>
             </Modal>
 
             <div>
@@ -153,17 +155,40 @@ const Profile = React.memo(function Profile() {
                 type="file"
                 onChange={(e) => handleFileSelection(e.target.files[0])}
               />
+              <br />
               <button onClick={handleFileUpload}>Upload</button>
             </div>
 
             <br />
-            <button onClick={() => handleFileDelete(userId)}>
-              Delete Photo
-            </button>
           </>
         );
       default:
         return null;
+    }
+  };
+
+  const handleFileDelete = async (imageUrl) => {
+    try {
+      const imageKey = imageUrl.split("/").pop().split("?")[0];
+
+      const response = await axios.delete(
+        `http://localhost:3001/user-images/${userId}/${imageKey}`,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setImages(images.filter((image) => image.url !== imageUrl));
+      alert("Image deleted successfully");
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
@@ -192,17 +217,6 @@ const Profile = React.memo(function Profile() {
 
   const handleFileSelection = (file) => {
     setSelectedFile(file);
-  };
-
-  const handleFileDelete = async (id) => {
-    try {
-      const response = await axios.delete(
-        `${process.env.REACT_APP_SOCKET_SERVER}/upload/${id}`
-      );
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error deleting file: ", error);
-    }
   };
 
   return (

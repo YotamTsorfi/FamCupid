@@ -61,10 +61,6 @@ router.post(
   upload.single("image"),
   async (req, res) => {
     try {
-      console.log("req.body: ", req.body);
-      console.log("req.file: ", req.file);
-      console.log("req.user.id: ", req.user.id);
-
       //resize the image
       const buffer = await sharp(req.file.buffer)
         .resize({ height: 1920, width: 1080, fit: "contain" })
@@ -108,31 +104,36 @@ router.post(
   }
 );
 
-//localhost:3001/user-images/:id
-router.delete("/:id", ensureAuthenticated, async (req, res) => {
+//localhost:3001/user-images/:userId/:imageKey
+router.delete("/:userId/:imageKey", ensureAuthenticated, async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await userBL.getUserById(id);
+    const { userId, imageKey } = req.params;
+    const fullImageKey = `${userId}/${imageKey}`;
+    const user = await userBL.getUserById(userId);
 
-    if (user.imageUrl) {
-      //const key = user.imageUrl.split("/").slice(-1)[0];
-      const key = user.imageUrl;
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
 
+    if (user.photosUrls.includes(fullImageKey)) {
       const params = {
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: key,
+        Key: fullImageKey,
       };
 
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
 
-      await userBL.setUserImage(id, "");
+      // Remove the image URL from the user's photosUrls array
+      user.photosUrls = user.photosUrls.filter((url) => url !== fullImageKey);
+      await user.save();
+
       res.send("File deleted successfully");
     } else {
-      res.status(404).send("User image is not set");
+      res.status(404).send("Image not found");
     }
   } catch (err) {
-    console.error("Error in DELETE /upload/:id: ", err);
+    console.error("Error in DELETE /user-images/:userId/:imageKey: ", err);
     res.status(500).send("Internal server error");
   }
 });
