@@ -1,39 +1,21 @@
-//import backgroundImage from "../background.jpg";
 import backgroundVideo from "../clip.mp4";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-
-//    TODO: use .env for the URL's
-
+import { useUserProfile } from "../hooks";
 import "./css/Login.css";
 
 function Login() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/auth/profile`,
-          {
-            withCredentials: true,
-          }
-        );
-
-        if (response.status === 200) {
-          navigate("/home");
-        }
-      } catch (error) {
-        if (error.response) {
-        } else {
-          console.error("Failed to check authentication:", error);
-        }
+  useUserProfile(
+    (response) => {
+      if (response.status === 200) {
+        navigate("/home");
       }
-    };
-
-    checkAuthentication();
-  }, [navigate]);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
 
   const handleGoogleLogin = () => {
     window.location.href = `${process.env.REACT_APP_SOCKET_SERVER}/auth/google`;
@@ -58,20 +40,6 @@ function Login() {
         overflowY: "auto",
       }}
     >
-      {/* <img
-        src={backgroundImage}
-        alt="Background"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          minWidth: "100%",
-          minHeight: "100%",
-          width: "auto",
-          height: "auto",
-          zIndex: -1,
-        }}
-      /> */}
       <video
         autoPlay
         loop

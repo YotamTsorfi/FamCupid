@@ -1,55 +1,41 @@
-import { useState, useEffect } from "react";
+import { useUserProfile, useLogin, useUser } from "../hooks";
+import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  selectUsername,
-  selectPhotoUrl,
-  login,
-} from "../redux/slices/userSlice";
 import "./css/Home.css";
 
 function Home() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const loginUser = useLogin();
+
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
-  const username = useSelector(selectUsername);
-  const photoUrl = useSelector(selectPhotoUrl);
+  const { username, photoUrl, bio } = useUser();
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return;
+  useUserProfile(
+    (response) => {
+      if (!isLoggedIn) {
+        return;
+      }
+      loginUser(response.data);
+      setLoading(false);
+    },
+    (error) => {
+      setIsLoggedIn(false);
+      navigate("/login");
     }
+  );
 
-    axios
-      .get(`${process.env.REACT_APP_SOCKET_SERVER}/auth/profile`, {
-        withCredentials: true,
-      })
-      .then((response) => {
-        dispatch(
-          login({
-            userId: response.data.userId,
-            username: response.data.username,
-            photoUrl: response.data.photoUrl,
-            token: response.data.token,
-            bio: response.data.bio,
-          })
-        );
-        setLoading(false);
-      })
-      .catch((error) => {
-        setIsLoggedIn(false);
-        navigate("/login");
-      });
-  }, [navigate, isLoggedIn, dispatch]);
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  // Logout function
   const handleLogout = () => {
     axios
       .get(`${process.env.REACT_APP_SOCKET_SERVER}/auth/logout`, {
@@ -61,6 +47,9 @@ function Home() {
 
         setIsLoggedIn(false);
         navigate("/login");
+      })
+      .catch((error) => {
+        setError("An error occurred while logging out.");
       });
   };
 
@@ -73,10 +62,9 @@ function Home() {
       <h1 className="home__welcome">Welcome, {username}!</h1>
       <div className="profile-card">
         <img className="profile-card__photo" src={photoUrl} alt={username} />
-        <h2 className="profile-card__name">{username}</h2>
-        <p className="profile-card__bio">Bio goes here...</p>
-        <button className="button" onClick={handleProfileRedirect}>
-          View Profile
+        <p className="profile-card__bio">{bio}</p>
+        <button className="profile-button" onClick={handleProfileRedirect}>
+          Profile
         </button>
 
         <br />

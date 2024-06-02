@@ -1,5 +1,5 @@
 .logout-button {
-    background-color: #4b7eaf;
+    background-color: #a72e38;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -9,12 +9,12 @@
     font-size: 14px;
     margin: 4px 2px;
     cursor: pointer;
-    border-radius: 12px;
+    border-radius: 5px;
     transition: background-color 0.3s ease;
   }
   
   .logout-button:hover {
-    background-color: #3b6e8f;
+    background-color: #ce7b82;
   }
 
   .home {
@@ -22,8 +22,8 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
-    color: #333;
-    background-color: #f9f9f9;
+    color: white;
+    /* background-color: #f9f9f9; */
   }
   
   .home__welcome {
@@ -54,17 +54,32 @@
     margin: 10px 0;
   }
   
-  .profile-card__bio {
+  /* .profile-card__bio {
     font-size: 0.9em;
     color: #666;
-  }
+  } */
   
-  .button {
-    padding: 10px 20px;
+  .profile-button {
     margin-top: 10px;
+    background-color: #a72e38;
+    color: white;
     border: none;
     border-radius: 5px;
-    background-color: #007bff;
-    color: #fff;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
     cursor: pointer;
   }
+
+  .profile-button:hover {
+    background-color: #ce7b82;
+  }
+
+  body {    
+    background-image: url("../../background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+}

@@ -1,28 +1,17 @@
+import { useUserProfile, useLogin, useUser } from "../hooks";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import { Tabs, Tab } from "react-bootstrap";
 import axios from "axios";
 import Modal from "react-modal";
-
-import {
-  selectUserId,
-  selectUsername,
-  selectPhotoUrl,
-  selectToken,
-  selectBio,
-  login,
-} from "../redux/slices/userSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./css/Profile.css";
 
 Modal.setAppElement("#root");
 
 const Profile = React.memo(function Profile() {
-  const userId = useSelector(selectUserId);
-  const username = useSelector(selectUsername);
-  const photoUrl = useSelector(selectPhotoUrl);
-  const token = useSelector(selectToken);
-  const bio = useSelector(selectBio);
+  const { userId, username, photoUrl, token, bio } = useUser();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [images, setImages] = useState([]);
@@ -31,29 +20,29 @@ const Profile = React.memo(function Profile() {
   const [key, setKey] = useState("details");
   const [userBio, setUserBio] = useState(bio || "");
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const loginUser = useLogin();
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_SOCKET_SERVER}/auth/profile`, {
-        withCredentials: true,
-      })
-      .then((response) => {
-        dispatch(
-          login({
-            userId: response.data.userId,
-            username: response.data.username,
-            photoUrl: response.data.photoUrl,
-            token: response.data.token,
-            bio: response.data.bio,
-          })
-        );
-      })
-      .catch((error) => {
-        navigate("/login");
-      });
-  }, [dispatch, navigate]);
+    setUserBio(bio || "");
+  }, [bio]);
+
+  useUserProfile(
+    (response) => {
+      loginUser(response.data);
+    },
+    (error) => {
+      navigate("/login");
+      toast.error(`Login failed: ${error.message}`);
+    }
+  );
+
+  useEffect(() => {
+    const savedTabKey = localStorage.getItem("activeTabKey");
+    if (savedTabKey) {
+      setKey(savedTabKey);
+    }
+  }, []);
 
   useEffect(() => {
     if (userId) {
@@ -62,7 +51,10 @@ const Profile = React.memo(function Profile() {
         .then((response) => {
           setImages(response.data);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          toast.error("Failed to fetch user images");
+        });
     }
   }, [userId]);
 
@@ -79,13 +71,13 @@ const Profile = React.memo(function Profile() {
       );
 
       if (response.status === 200) {
-        alert("Bio saved successfully");
+        toast.success("Bio saved successfully");
       } else {
         throw new Error("Failed to save bio");
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to save bio");
+      toast.error("Failed to save bio");
     }
   };
 
@@ -95,36 +87,31 @@ const Profile = React.memo(function Profile() {
 
   const handleSelect = (k) => {
     setKey(k);
+    localStorage.setItem("activeTabKey", k);
   };
 
   const renderTabContent = () => {
     switch (key) {
       case "details":
         return (
-          <>
-            <h1>{username}</h1>
-            <p>User ID: {userId}</p>
-
-            <div>
-              <h2>Bio</h2>
-              <textarea
-                value={bio || userBio}
-                onChange={(e) => setUserBio(e.target.value)}
-              />
-              <br />
-              <button onClick={handleBioSave}>Update</button>
-            </div>
-          </>
+          <div className="fade-in" key={key}>
+            <h2>Bio</h2>
+            <textarea
+              className="textarea-fixed"
+              placeholder="Here you can write your bio"
+              value={userBio}
+              onChange={(e) => setUserBio(e.target.value)}
+            />
+            <br />
+            <button className="update-button" onClick={handleBioSave}>
+              Update
+            </button>
+          </div>
         );
       case "photos":
         return (
-          <>
-            <h2>User Photos</h2>
-
-            <h3>Profile photo</h3>
-            <img className="profile-photo" src={photoUrl} alt={username} />
-
-            <h3>Uploaded photo</h3>
+          <div className="fade-in" key={key}>
+            <h3>Uploaded photos</h3>
             {images.map((image, index) => (
               <img
                 key={index}
@@ -153,14 +140,22 @@ const Profile = React.memo(function Profile() {
             <div>
               <input
                 type="file"
-                onChange={(e) => handleFileSelection(e.target.files[0])}
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file.size > 1048576) {
+                    toast.error("File size should be less than 1MB");
+                  } else {
+                    handleFileSelection(file);
+                  }
+                }}
               />
               <br />
               <button onClick={handleFileUpload}>Upload</button>
             </div>
 
             <br />
-          </>
+          </div>
         );
       default:
         return null;
@@ -185,10 +180,12 @@ const Profile = React.memo(function Profile() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setImages(images.filter((image) => image.url !== imageUrl));
-      alert("Image deleted successfully");
+      setImages(images.filter((image) => image !== imageUrl));
+      setIsModalOpen(false);
+      toast.success("Image deleted successfully");
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Failed to delete image");
     }
   };
 
@@ -209,9 +206,19 @@ const Profile = React.memo(function Profile() {
           },
         }
       );
+
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setImages((prevImages) => [...prevImages, imageUrl]);
+
       console.log(response.data);
+      toast.success("Image successfully uploaded");
     } catch (error) {
       console.error("Error uploading file: ", error);
+      toast.error("Failed to upload image");
     }
   };
 
@@ -221,8 +228,12 @@ const Profile = React.memo(function Profile() {
 
   return (
     <div>
+      <ToastContainer />
+      <button className="go-home-button" onClick={goHome}>
+        Go Back to Home
+      </button>
       <h1>Profile</h1>
-      <button onClick={goHome}>Go Back to Home</button>
+      <img className="profile-photo" src={photoUrl} alt={username} />
       <Tabs
         id="controlled-tab-example"
         activeKey={key}
@@ -231,7 +242,6 @@ const Profile = React.memo(function Profile() {
       >
         <Tab eventKey="details" title="Details" className="nav-link" />
         <Tab eventKey="photos" title="Photos" className="nav-link" />
-        {/* Add more tabs as needed */}
       </Tabs>
       {renderTabContent()}
     </div>
