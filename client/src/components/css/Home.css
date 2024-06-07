@@ -61,7 +61,7 @@
   
   .profile-button {
     margin-top: 10px;
-    background-color: #a72e38;
+    background-color: #356dc2;
     color: white;
     border: none;
     border-radius: 5px;
@@ -75,7 +75,7 @@
   }
 
   .profile-button:hover {
-    background-color: #ce7b82;
+    background-color: #84c0d3;
   }
 
   body {    

@@ -1,25 +1,6 @@
-/**
- * Socket controller module that handles socket.io connections and events.
- * @module socketController
- * @param {Object} server - The HTTP server object.
- */
 const socketIO = require("socket.io");
-let users = {};
+const users = {};
 
-/**
- * Finds the socket associated with a given user ID.
- * @param {string} userId - The ID of the user.
- * @returns {Socket} The socket associated with the user ID, or undefined if not found.
- */
-function findSocketByUserId(userId) {
-  // Implement this function based on how you're storing the user-socket associations
-  return users[userId];
-}
-
-/**
- * Initializes the socket controller and sets up socket.io connections and events.
- * @param {Object} server - The HTTP server object.
- */
 function socketController(server) {
   const io = socketIO(server, {
     cors: {
@@ -29,28 +10,48 @@ function socketController(server) {
     },
   });
 
-  // Handle socket.io connection event
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on("send_nice_message", (data) => {
-      //console.log(`Received message: ${data.message}`);
       socket.broadcast.emit("received_message", data);
     });
 
-    // Uncomment and implement the following event handlers as needed
+    // Handle user login
+    socket.on("login", (user) => {
+      // Check that the user object contains all the necessary properties
+      if (user && user.id && user.username && user.photoUrl && user.bio) {
+        // Add user to online users list
+        users[user.id] = { socketId: socket.id, ...user };
 
-    // socket.on("login", (user) => {
-    //   // Handle login event
-    // });
+        // Emit updated online users list
+        io.emit("onlineUsers", Object.values(users));
+      } else {
+        console.log("Received incomplete user object:", user);
+      }
+    });
 
-    // socket.on("private message", ({ senderId, recipientId, message }) => {
-    //   // Handle private message event
-    // });
+    // Handle private message event
+    socket.on("private message", ({ senderId, recipientId, message }) => {
+      // Find recipient's socket
+      const recipientSocket = findSocketByUserId(recipientId);
+      if (recipientSocket) {
+        // Emit private message to recipient
+        recipientSocket.emit("private message", { senderId, message });
+      }
+    });
 
-    // socket.on("disconnect", () => {
-    //   // Handle disconnect event
-    // });
+    // Handle user disconnect
+    socket.on("disconnect", () => {
+      // Find user associated with the socket and remove them from online users list
+      const userId = Object.keys(users).find(
+        (key) => users[key].socketId === socket.id
+      );
+      if (userId) delete users[userId];
+
+      // Emit updated online users list
+      io.emit("onlineUsers", Object.values(users));
+    });
   });
 }
 

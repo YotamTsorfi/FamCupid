@@ -1,0 +1,62 @@
+.user-details-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 500px;
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: jump 0.5s ease;
+  }
+  
+  @keyframes jump {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+    }
+    80% {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .user-photos img {
+    cursor: pointer;
+  }
+
+
+  .user-details-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 500px;
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: jump 0.5s ease;
+    overflow-y: auto; /* Enable vertical scrolling within the modal */
+    max-height: 90vh; /* Ensure modal content does not exceed the viewport height */
+}
+
+.enlarged-image-container {
+    display: flex; /* Use flexbox to center the image vertically */
+    align-items: center; /* Center the image vertically */
+    justify-content: center; /* Center the image horizontally */
+}
+
+.enlarged-image-container img {
+    max-height: 80vh; /* Set a max height for the enlarged image */
+    width: auto; /* Maintain the image aspect ratio */
+    max-width: 100%; /* Ensure the image does not exceed the container width */
+}

@@ -72,6 +72,7 @@ router.get("/profile", async (req, res) => {
       userId: user._id,
       username: user.username,
       photoUrl: user.photoUrl,
+      photosUrls: user.photosUrls,
       token: token,
       bio: user.bio,
     });

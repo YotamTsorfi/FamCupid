@@ -1,39 +1,22 @@
-import { useUserProfile, useLogin, useUser } from "../hooks";
+import { useUserProfile, useUser } from "../hooks";
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./css/Home.css";
 
 function Home() {
-  const navigate = useNavigate();
-  const loginUser = useLogin();
+  console.log("Home component rendered");
 
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
-  const { username, photoUrl, bio } = useUser();
+  const navigate = useNavigate();
+  const user = useUser();
 
-  useUserProfile(
-    (response) => {
-      if (!isLoggedIn) {
-        return;
-      }
-      loginUser(response.data);
-      setLoading(false);
-    },
-    (error) => {
-      setIsLoggedIn(false);
-      navigate("/login");
-    }
-  );
+  useUserProfile();
 
   if (error) {
     return <div>Error: {error}</div>;
-  }
-
-  if (loading) {
-    return <div>Loading...</div>;
   }
 
   const handleLogout = () => {
@@ -59,10 +42,14 @@ function Home() {
 
   return (
     <div className="home">
-      <h1 className="home__welcome">Welcome, {username}!</h1>
+      <h1 className="home__welcome">Welcome, {user.username}!</h1>
       <div className="profile-card">
-        <img className="profile-card__photo" src={photoUrl} alt={username} />
-        <p className="profile-card__bio">{bio}</p>
+        <img
+          className="profile-card__photo"
+          src={user.photoUrl}
+          alt={user.username}
+        />
+        <p className="profile-card__bio">{user.bio}</p>
         <button className="profile-button" onClick={handleProfileRedirect}>
           Profile
         </button>

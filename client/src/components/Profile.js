@@ -1,17 +1,20 @@
-import { useUserProfile, useLogin, useUser } from "../hooks";
-import React, { useState, useEffect } from "react";
+import { useUserProfile, useUser } from "../hooks";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, Tab } from "react-bootstrap";
-import axios from "axios";
-import Modal from "react-modal";
 import { ToastContainer, toast } from "react-toastify";
+import Modal from "react-modal";
+import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 import "./css/Profile.css";
 
 Modal.setAppElement("#root");
 
-const Profile = React.memo(function Profile() {
-  const { userId, username, photoUrl, token, bio } = useUser();
+function Profile() {
+  console.log("Profile component rendered");
+
+  const { userId, username, photoUrl, bio, token } = useUser();
+  useUserProfile();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [images, setImages] = useState([]);
@@ -21,21 +24,10 @@ const Profile = React.memo(function Profile() {
   const [userBio, setUserBio] = useState(bio || "");
 
   const navigate = useNavigate();
-  const loginUser = useLogin();
 
   useEffect(() => {
     setUserBio(bio || "");
   }, [bio]);
-
-  useUserProfile(
-    (response) => {
-      loginUser(response.data);
-    },
-    (error) => {
-      navigate("/login");
-      toast.error(`Login failed: ${error.message}`);
-    }
-  );
 
   useEffect(() => {
     const savedTabKey = localStorage.getItem("activeTabKey");
@@ -230,7 +222,10 @@ const Profile = React.memo(function Profile() {
     <div>
       <ToastContainer />
       <button className="go-home-button" onClick={goHome}>
-        Go Back to Home
+        Home
+      </button>
+      <button className="members-button" onClick={() => navigate("/members")}>
+        Members
       </button>
       <h1>Profile</h1>
       <img className="profile-photo" src={photoUrl} alt={username} />
@@ -246,5 +241,5 @@ const Profile = React.memo(function Profile() {
       {renderTabContent()}
     </div>
   );
-});
+}
 export default Profile;

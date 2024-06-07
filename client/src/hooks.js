@@ -1,9 +1,14 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { login, setError } from "./redux/slices/userSlice";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { login } from "./redux/slices/userSlice";
 
-export function useUserProfile(onSuccess, onFailure) {
+export function useUserProfile() {
+  console.log("useUserProfile hook called");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -14,14 +19,16 @@ export function useUserProfile(onSuccess, onFailure) {
           }
         );
 
-        onSuccess(response);
+        dispatch(login(response.data));
       } catch (error) {
-        onFailure(error);
+        console.error("Error fetching user profile:", error);
+        dispatch(setError(error));
+        navigate("/login");
       }
     };
 
     fetchUserProfile();
-  }, [onSuccess, onFailure]);
+  }, [dispatch, navigate]);
 }
 
 export function useLogin() {
@@ -30,10 +37,11 @@ export function useLogin() {
   return (userData) => {
     dispatch(
       login({
+        token: userData.token,
         userId: userData.userId,
         username: userData.username,
         photoUrl: userData.photoUrl,
-        token: userData.token,
+        photosUrls: userData.photosUrls,
         bio: userData.bio,
       })
     );

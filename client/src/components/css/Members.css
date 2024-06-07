@@ -1,0 +1,26 @@
+.go-profile-button{
+  margin-top: 10px;
+  background-color: #356dc2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  }
+
+  .go-profile-button:hover{
+    background-color: #84c0d3;
+  }
+
+  .members-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    cursor: pointer;
+  }
