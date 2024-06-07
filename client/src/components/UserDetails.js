@@ -3,7 +3,6 @@ import axios from "axios";
 import "./css/UserDetails.css";
 
 function UserDetails({ user, onClose, onChat }) {
-  console.log("UserDetails rendered with user:", user);
   const [signedUrls, setSignedUrls] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageEnlarged, setIsImageEnlarged] = useState(false);
@@ -55,15 +54,12 @@ function UserDetails({ user, onClose, onChat }) {
                   alt={`Photo ${currentImageIndex + 1}`}
                   style={{ width: "100%", height: "auto" }}
                 />
-                {/* <button onClick={toggleImageEnlargement}>
-                  Close enlarged images
-                  </button> */}
               </div>
             ) : (
               <img
                 src={signedUrls[currentImageIndex]}
                 alt={`Photo ${currentImageIndex + 1}`}
-                style={{ maxWidth: "200px", maxHeight: "200px" }}
+                style={{ maxWidth: "200px", maxHeight: "220px" }}
                 onClick={toggleImageEnlargement}
               />
             )}
@@ -73,8 +69,9 @@ function UserDetails({ user, onClose, onChat }) {
           </>
         )}
       </div>
+      <button onClick={() => onChat(user.id)}>Send a message</button>
       <br />
-      <button onClick={() => onChat(user.id)}>Chat</button>
+      <br />
       <button onClick={onClose}>Close Profile</button>
     </div>
   );

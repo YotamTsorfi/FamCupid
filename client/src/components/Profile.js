@@ -11,8 +11,6 @@ import "./css/Profile.css";
 Modal.setAppElement("#root");
 
 function Profile() {
-  console.log("Profile component rendered");
-
   const { userId, username, photoUrl, bio, token } = useUser();
   useUserProfile();
 

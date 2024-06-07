@@ -5,12 +5,16 @@ import socket from "../services/socket";
 import { login } from "../services/socketServices";
 import Member from "./Member";
 import UserDetails from "./UserDetails";
+import ChatModal from "./ChatModal";
 import "./css/Members.css";
 
 function Members() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [viewedUser, setViewedUser] = useState(null);
+  const [chatUser, setChatUser] = useState(null);
   const { userId, username, photoUrl, bio } = useUser();
+
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   useUserProfile();
   const navigate = useNavigate();
@@ -26,7 +30,7 @@ function Members() {
     login(user);
 
     socket.on("onlineUsers", (users) => {
-      console.log("Received onlineUsers event:", users);
+      // console.log("Received onlineUsers event:", users);
       const otherUsers = users.filter((u) => u.id !== user.id);
       setOnlineUsers(otherUsers);
     });
@@ -42,10 +46,20 @@ function Members() {
 
   const handleClose = () => {
     setViewedUser(null);
+    setChatUser(null);
   };
 
   const handleChat = (userId) => {
-    // ...
+    handleClose();
+    const userObject = onlineUsers.find((u) => u.id === userId);
+    setChatUser(userObject);
+    // setViewedUser(userObject);
+
+    setIsChatModalOpen(true);
+  };
+
+  const handleCloseChatModal = () => {
+    setIsChatModalOpen(false);
   };
 
   const goToProfile = () => {
@@ -57,6 +71,14 @@ function Members() {
       <button className="go-profile-button" onClick={goToProfile}>
         Profile
       </button>
+
+      {isChatModalOpen && (
+        <ChatModal
+          onClose={handleCloseChatModal}
+          user={chatUser}
+          // userId={viewedUser ? viewedUser.id : null}
+        />
+      )}
 
       <h1>Online Users</h1>
       <div className="members-container">

@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export function useUserProfile() {
-  console.log("useUserProfile hook called");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

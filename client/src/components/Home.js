@@ -5,8 +5,6 @@ import axios from "axios";
 import "./css/Home.css";
 
 function Home() {
-  console.log("Home component rendered");
-
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
