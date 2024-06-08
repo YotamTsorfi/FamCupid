@@ -25,13 +25,19 @@
     padding: 10px;
     border-radius: 20px;
     max-width: 70%;
+    color: #333;
   }
   
   .user {
     background-color: #dcf8c6;
     align-self: flex-end;
+    color: #000;
   }
   
+  .recipient {
+    color: #555; 
+  }
+
   .input-area {
     display: flex;
   }
@@ -84,4 +90,26 @@
     color: rgb(90, 151, 230);
   }
 
+  .message-timestamp {
+    text-align: right;
+    font-size: 0.75em; /* Adjust the size as needed */
+    padding-right: 5px; /* Adds some spacing to the right */
+  }
+
+  .message.sent {
+    background-color: #DCF8C6; /* Light green background for sent messages */
+    text-align: right; /* Aligns sent messages to the right */
+    margin-left: auto; /* Pushes the message to the right side */
+    padding: 10px; /* Adds some padding around the text */
+    border-radius: 10px; /* Rounds the corners of the message bubble */
+    max-width: 80%; /* Ensures the message doesn't take full width */
+  }
   
+  .message.received {
+    background-color: #ECECEC; /* Light grey background for received messages */
+    text-align: left; /* Aligns received messages to the left */
+    margin-right: auto; /* Ensures the message stays on the left side */
+    padding: 10px; /* Adds some padding around the text */
+    border-radius: 10px; /* Rounds the corners of the message bubble */
+    max-width: 80%; /* Ensures the message doesn't take full width */
+  }

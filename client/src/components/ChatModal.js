@@ -12,10 +12,22 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
 
   useEffect(() => {
     // Function to handle an incoming private message
-    const handlePrivateMessage = ({ senderId, message }) => {
+    const handlePrivateMessage = ({ senderId, message, timestamp }) => {
+      // console.log(
+      //   "Received private message:",
+      //   senderId,
+      //   message,
+      //   new Date(timestamp).toLocaleTimeString()
+      // );
+
       setMessages((prevMessages) => [
         ...prevMessages,
-        { id: Date.now(), text: message, sender: senderId },
+        {
+          id: Date.now(),
+          text: message,
+          sender: senderId,
+          time: new Date(timestamp).toLocaleTimeString(),
+        },
       ]);
     };
 
@@ -30,16 +42,24 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
 
   const sendMessage = (e) => {
     e.preventDefault();
+
     if (input.trim()) {
       const recipientId = recipientUser.id;
       const senderId = senderUser.id;
+      const timestamp = Date.now();
 
       setMessages((prevMessages) => [
         ...prevMessages,
-        { id: Date.now(), text: input, sender: senderId },
+        {
+          id: timestamp,
+          text: input,
+          sender: senderId,
+          username: senderUser.username,
+          time: new Date(timestamp).toLocaleTimeString(),
+        },
       ]);
 
-      sendPrivateMessage(senderId, recipientId, input);
+      sendPrivateMessage(senderId, recipientId, input, timestamp);
 
       setInput("");
     }
@@ -108,7 +128,14 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
               message.sender === senderUser.id ? "sent" : "received"
             }`}
           >
+            <strong>
+              {message.sender === senderUser.id
+                ? senderUser.username
+                : recipientUser.username}
+              :
+            </strong>{" "}
             {message.text}
+            <div className="message-timestamp">{message.time}</div>
           </div>
         ))}
       </div>

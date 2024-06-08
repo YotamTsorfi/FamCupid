@@ -37,28 +37,36 @@ function socketController(server) {
     }
 
     // Handle private message event
-    socket.on("private message", ({ senderId, recipientId, message }) => {
-      const recipientSocket = findSocketByUserId(recipientId);
+    socket.on(
+      "private message",
+      ({ senderId, recipientId, message, timestamp }) => {
+        // Find recipient's socket
+        const recipientSocket = findSocketByUserId(recipientId);
 
-      //For debug, later insert into the if, if the recipient is online
-      storeMessage(senderId, recipientId, message);
+        if (recipientSocket) {
+          // Emit private message to recipient
+          storeMessage(senderId, recipientId, message, timestamp);
+          recipientSocket.emit("private message", {
+            senderId,
+            message,
+            timestamp,
+          });
+        }
 
-      if (recipientSocket) {
-        // Emit private message to recipient
-        recipientSocket.emit("private message", { senderId, message });
+        // if (recipientSocket) {
+        //   io.to(recipientSocket).emit('receiveMessage', { senderId, message });
+        //   storeMessage(senderId, recipientId, message);
+        //   console.log(`Message sent from ${senderId} to ${recipientId}: ${message}`);
+        // } else {
+        //   console.log(`Recipient ${recipientId} is not online`);
+        // }
       }
+    );
 
-      // if (recipientSocket) {
-      //   io.to(recipientSocket).emit('receiveMessage', { senderId, message });
-      //   storeMessage(senderId, recipientId, message);
-      //   console.log(`Message sent from ${senderId} to ${recipientId}: ${message}`);
-      // } else {
-      //   console.log(`Recipient ${recipientId} is not online`);
-      // }
-    });
-
-    function storeMessage(senderId, recipientId, message) {
-      console.log(`Message from ${senderId} to ${recipientId}: ${message}`);
+    function storeMessage(senderId, recipientId, message, timestamp) {
+      // console.log(
+      //   `Message from ${senderId} to ${recipientId}: ${message} at ${timestamp}`
+      // );
     }
 
     // Handle user disconnect
