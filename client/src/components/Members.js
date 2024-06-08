@@ -13,6 +13,7 @@ function Members() {
   const [viewedUser, setViewedUser] = useState(null);
   const [chatUser, setChatUser] = useState(null);
   const { userId, username, photoUrl, bio } = useUser();
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
@@ -26,8 +27,10 @@ function Members() {
       photoUrl: photoUrl,
       bio: bio,
     };
-
-    login(user);
+    if (userId && username && photoUrl && bio) {
+      login(user);
+      setCurrentUser(user);
+    }
 
     socket.on("onlineUsers", (users) => {
       // console.log("Received onlineUsers event:", users);
@@ -75,8 +78,8 @@ function Members() {
       {isChatModalOpen && (
         <ChatModal
           onClose={handleCloseChatModal}
-          user={chatUser}
-          // userId={viewedUser ? viewedUser.id : null}
+          recipientUser={chatUser}
+          senderUser={currentUser}
         />
       )}
 

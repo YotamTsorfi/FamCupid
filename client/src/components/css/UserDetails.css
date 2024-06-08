@@ -30,6 +30,13 @@
     cursor: pointer;
   }
 
+  .user-photos img.enlarge-cursor {
+    cursor: zoom-in; 
+  }
+
+  .enlarged-image-container img.reduce-cursor {
+    cursor: zoom-out; 
+  }
 
   .user-details-modal {
     position: fixed;
@@ -56,7 +63,7 @@
 }
 
 .enlarged-image-container img {
-    max-height: 80vh; /* Set a max height for the enlarged image */
+    max-height: 100%; /* Set a max height for the enlarged image */
     width: auto; /* Maintain the image aspect ratio */
     max-width: 100%; /* Ensure the image does not exceed the container width */
 }

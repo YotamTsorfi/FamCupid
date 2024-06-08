@@ -204,7 +204,7 @@ function Profile() {
       const imageUrl = URL.createObjectURL(selectedFile);
       setImages((prevImages) => [...prevImages, imageUrl]);
 
-      console.log(response.data);
+      // console.log(response.data);
       toast.success("Image successfully uploaded");
     } catch (error) {
       console.error("Error uploading file: ", error);

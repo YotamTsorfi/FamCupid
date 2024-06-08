@@ -51,16 +51,18 @@ function UserDetails({ user, onClose, onChat }) {
               >
                 <img
                   src={signedUrls[currentImageIndex]}
-                  alt={`Photo ${currentImageIndex + 1}`}
-                  style={{ width: "100%", height: "auto" }}
+                  alt={`${currentImageIndex + 1}`}
+                  style={{ width: "150%", height: "150%" }}
+                  className="reduce-cursor"
                 />
               </div>
             ) : (
               <img
                 src={signedUrls[currentImageIndex]}
-                alt={`Photo ${currentImageIndex + 1}`}
+                alt={`${currentImageIndex + 1}`}
                 style={{ maxWidth: "200px", maxHeight: "220px" }}
                 onClick={toggleImageEnlargement}
+                className={!isImageEnlarged ? "enlarge-cursor" : ""}
               />
             )}
             <button onClick={prevImage}>&lt;</button>

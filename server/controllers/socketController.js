@@ -31,15 +31,35 @@ function socketController(server) {
       }
     });
 
+    function findSocketByUserId(userId) {
+      const user = users[userId];
+      return user ? io.sockets.sockets.get(user.socketId) : null;
+    }
+
     // Handle private message event
     socket.on("private message", ({ senderId, recipientId, message }) => {
-      // Find recipient's socket
       const recipientSocket = findSocketByUserId(recipientId);
+
+      //For debug, later insert into the if, if the recipient is online
+      storeMessage(senderId, recipientId, message);
+
       if (recipientSocket) {
         // Emit private message to recipient
         recipientSocket.emit("private message", { senderId, message });
       }
+
+      // if (recipientSocket) {
+      //   io.to(recipientSocket).emit('receiveMessage', { senderId, message });
+      //   storeMessage(senderId, recipientId, message);
+      //   console.log(`Message sent from ${senderId} to ${recipientId}: ${message}`);
+      // } else {
+      //   console.log(`Recipient ${recipientId} is not online`);
+      // }
     });
+
+    function storeMessage(senderId, recipientId, message) {
+      console.log(`Message from ${senderId} to ${recipientId}: ${message}`);
+    }
 
     // Handle user disconnect
     socket.on("disconnect", () => {

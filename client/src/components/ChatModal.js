@@ -1,21 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { sendPrivateMessage } from "../services/socketServices";
+import socket from "../services/socket";
 import "./css/ChatModal.css";
 
-const ChatModal = ({ onClose, user }) => {
+const ChatModal = ({ onClose, recipientUser, senderUser }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
 
+  useEffect(() => {
+    // Function to handle an incoming private message
+    const handlePrivateMessage = ({ senderId, message }) => {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: Date.now(), text: message, sender: senderId },
+      ]);
+    };
+
+    // Register the event listener for private messages
+    socket.on("private message", handlePrivateMessage);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      socket.off("private message", handlePrivateMessage);
+    };
+  }, []);
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (input.trim()) {
-      setMessages([
-        ...messages,
-        { id: Date.now(), text: input, sender: "user" },
+      const recipientId = recipientUser.id;
+      const senderId = senderUser.id;
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: Date.now(), text: input, sender: senderId },
       ]);
+
+      sendPrivateMessage(senderId, recipientId, input);
+
       setInput("");
     }
   };
@@ -28,13 +53,16 @@ const ChatModal = ({ onClose, user }) => {
     });
   };
 
-  const handleMouseMove = (e) => {
-    if (isDragging) {
-      const newX = e.clientX - startPosition.x;
-      const newY = e.clientY - startPosition.y;
-      setPosition({ x: newX, y: newY });
-    }
-  };
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (isDragging) {
+        const newX = e.clientX - startPosition.x;
+        const newY = e.clientY - startPosition.y;
+        setPosition({ x: newX, y: newY });
+      }
+    },
+    [isDragging, startPosition.x, startPosition.y]
+  );
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -50,7 +78,7 @@ const ChatModal = ({ onClose, user }) => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, startPosition.x, startPosition.y]);
+  }, [isDragging, handleMouseMove]);
 
   return (
     <div
@@ -64,17 +92,22 @@ const ChatModal = ({ onClose, user }) => {
     >
       <div className="user-info" style={{ borderBottom: "1px solid #ccc" }}>
         {" "}
-        {user.photoUrl && (
-          <img src={user.photoUrl} alt="User" className="user-photo" />
+        {recipientUser.photoUrl && (
+          <img src={recipientUser.photoUrl} alt="User" className="user-photo" />
         )}
-        <h3 className="user-name">{user.username}</h3>
+        <h3 className="user-name">{recipientUser.username}</h3>
       </div>
       <button className="close-chat" onClick={onClose}>
         Close
       </button>
       <div className="messages-area">
         {messages.map((message) => (
-          <div key={message.id} className={`message ${message.sender}`}>
+          <div
+            key={message.id}
+            className={`message ${
+              message.sender === senderUser.id ? "sent" : "received"
+            }`}
+          >
             {message.text}
           </div>
         ))}
