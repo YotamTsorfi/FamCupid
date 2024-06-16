@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { sendPrivateMessage } from "../services/socketServices";
-import socket from "../services/socket";
 import "./css/ChatModal.css";
 
-const ChatModal = ({ onClose, recipientUser, senderUser }) => {
+const ChatModal = ({
+  onClose,
+  recipientUser,
+  senderUser,
+  msgData,
+  incomingMessages = [],
+}) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -11,41 +15,20 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Function to handle an incoming private message
-    const handlePrivateMessage = ({ senderId, message, timestamp }) => {
-      // console.log(
-      //   "Received private message:",
-      //   senderId,
-      //   message,
-      //   new Date(timestamp).toLocaleTimeString()
-      // );
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: Date.now(),
-          text: message,
-          sender: senderId,
-          time: new Date(timestamp).toLocaleTimeString(),
-        },
-      ]);
-    };
-
-    // Register the event listener for private messages
-    socket.on("private message", handlePrivateMessage);
-
-    // Cleanup function to remove the event listener
-    return () => {
-      socket.off("private message", handlePrivateMessage);
-    };
-  }, []);
+    // Merge incomingMessages with existing messages, avoiding duplicates
+    setMessages((currentMessages) => {
+      const incomingUnique = incomingMessages.filter(
+        (incoming) =>
+          !currentMessages.some((current) => current.id === incoming.id)
+      );
+      return [...currentMessages, ...incomingUnique];
+    });
+  }, [incomingMessages]);
 
   const sendMessage = (e) => {
     e.preventDefault();
 
     if (input.trim()) {
-      const recipientId = recipientUser.id;
-      const senderId = senderUser.id;
       const timestamp = Date.now();
 
       setMessages((prevMessages) => [
@@ -53,14 +36,19 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
         {
           id: timestamp,
           text: input,
-          sender: senderId,
+          senderId: senderUser.id,
           username: senderUser.username,
           time: new Date(timestamp).toLocaleTimeString(),
         },
       ]);
 
-      sendPrivateMessage(senderId, recipientId, input, timestamp);
+      const inputObject = {
+        text: input,
+        timestamp: new Date(timestamp).toLocaleTimeString(),
+      };
 
+      //Send message to server (By Members.js)
+      msgData(inputObject);
       setInput("");
     }
   };
@@ -125,11 +113,11 @@ const ChatModal = ({ onClose, recipientUser, senderUser }) => {
           <div
             key={message.id}
             className={`message ${
-              message.sender === senderUser.id ? "sent" : "received"
+              message.senderId === senderUser.id ? "sent" : "received"
             }`}
           >
             <strong>
-              {message.sender === senderUser.id
+              {message.senderId === senderUser.id
                 ? senderUser.username
                 : recipientUser.username}
               :

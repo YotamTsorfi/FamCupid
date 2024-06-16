@@ -38,7 +38,7 @@ function socketController(server) {
 
     // Handle private message event
     socket.on(
-      "private message",
+      "private_message",
       ({ senderId, recipientId, message, timestamp }) => {
         // Find recipient's socket
         const recipientSocket = findSocketByUserId(recipientId);
@@ -46,11 +46,16 @@ function socketController(server) {
         if (recipientSocket) {
           // Emit private message to recipient
           storeMessage(senderId, recipientId, message, timestamp);
-          recipientSocket.emit("private message", {
+
+          recipientSocket.emit("private_message", {
             senderId,
+            recipientId,
             message,
             timestamp,
           });
+
+          // socket.to(recipientSocket).emit("receive_private_message",
+          //   { senderId, recipientId, message, timestamp });
         }
 
         // if (recipientSocket) {
@@ -64,9 +69,9 @@ function socketController(server) {
     );
 
     function storeMessage(senderId, recipientId, message, timestamp) {
-      // console.log(
-      //   `Message from ${senderId} to ${recipientId}: ${message} at ${timestamp}`
-      // );
+      console.log(
+        `Message from ${senderId} to ${recipientId}: ${message} at ${timestamp}`
+      );
     }
 
     // Handle user disconnect
