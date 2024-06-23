@@ -1,3 +1,4 @@
+const ChatBL = require("../BL/chatBL");
 const socketIO = require("socket.io");
 const users = {};
 
@@ -11,11 +12,11 @@ function socketController(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    // console.log(`User connected: ${socket.id}`);
 
-    socket.on("send_nice_message", (data) => {
-      socket.broadcast.emit("received_message", data);
-    });
+    // socket.on("send_nice_message", (data) => {
+    //   socket.broadcast.emit("received_message", data);
+    // });
 
     // Handle user login
     socket.on("login", (user) => {
@@ -44,34 +45,33 @@ function socketController(server) {
         const recipientSocket = findSocketByUserId(recipientId);
 
         if (recipientSocket) {
-          // Emit private message to recipient
+          //store message in database
           storeMessage(senderId, recipientId, message, timestamp);
 
+          // Emit private message to recipient
           recipientSocket.emit("private_message", {
             senderId,
             recipientId,
             message,
             timestamp,
           });
-
-          // socket.to(recipientSocket).emit("receive_private_message",
-          //   { senderId, recipientId, message, timestamp });
         }
-
-        // if (recipientSocket) {
-        //   io.to(recipientSocket).emit('receiveMessage', { senderId, message });
-        //   storeMessage(senderId, recipientId, message);
-        //   console.log(`Message sent from ${senderId} to ${recipientId}: ${message}`);
-        // } else {
-        //   console.log(`Recipient ${recipientId} is not online`);
-        // }
       }
     );
 
+    // Store message in database
     function storeMessage(senderId, recipientId, message, timestamp) {
-      console.log(
-        `Message from ${senderId} to ${recipientId}: ${message} at ${timestamp}`
-      );
+      const messageObj = {
+        senderId,
+        recipientId,
+        message,
+        timestamp,
+      };
+
+      ChatBL.insertOrUpdateChat(messageObj).then((message) => {
+        console.log("Message stored.");
+        // console.log("Message stored successfully:", message);
+      });
     }
 
     // Handle user disconnect

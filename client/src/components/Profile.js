@@ -223,7 +223,7 @@ function Profile() {
         Home
       </button>
       <button className="members-button" onClick={() => navigate("/members")}>
-        Members
+        Chat Online Members
       </button>
       <h1>Profile</h1>
       <img className="profile-photo" src={photoUrl} alt={username} />

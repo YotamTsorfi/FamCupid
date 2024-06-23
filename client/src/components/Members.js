@@ -7,6 +7,7 @@ import socket from "../services/socket";
 import Member from "./Member";
 import UserDetails from "./UserDetails";
 import ChatModal from "./ChatModal";
+import axios from "axios";
 import "./css/Members.css";
 
 function Members() {
@@ -15,28 +16,32 @@ function Members() {
   const [viewedUser, setViewedUser] = useState(null);
   const [senderUser, setSenderUser] = useState(null);
   const [recipientUser, setRecipientUser] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [chatModalVisible, setChatModalVisible] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
 
   useUserProfile();
   const navigate = useNavigate();
 
-  const handleNotificationClick = (senderId) => {
-    const notification = notifications.find((n) => n.senderId === senderId);
-    if (notification) {
-      setRecipientUser(onlineUsers.find((user) => user.id === senderId));
-      setMessages([
-        {
-          id: notification.timestamp,
-          text: notification.message,
-          senderId: senderId,
-          username: onlineUsers.find((user) => user.id === senderId).username,
-          time: notification.timestamp,
-        },
-      ]);
-      setChatModalVisible(true);
+  //---------------------------------------------------------
+  const fetchChatHistory = async (senderId, receiverId) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_SOCKET_SERVER}/chat`,
+        { senderId, receiverId }
+      );
+      setChatHistory(response.data);
+    } catch (error) {
+      console.error("Failed to fetch chat history:", error);
+      setChatHistory([]);
     }
+  };
+
+  //---------------------------------------------------------
+  const handleNotificationClick = (senderId) => {
+    setRecipientUser(onlineUsers.find((user) => user.id === senderId));
+    fetchChatHistory(userId, senderId);
+    setChatModalVisible(true);
   };
 
   //---------------------------------------------------------
@@ -47,34 +52,38 @@ function Members() {
       message,
       timestamp,
     }) => {
-      // Add the message to notifications
-      const newNotification = { senderId, message, timestamp, isOpen: false };
-      setNotifications((prev) => [...prev, newNotification]);
+      // Find the sender's user object from the onlineUsers array
+      const senderUser = onlineUsers.find((user) => user.id === senderId);
 
-      // console.log(
-      //   `Received private message: ${message} from ${senderId} to ${recipientId} at ${timestamp}`
-      // );
+      const newMessage = {
+        content: message,
+        senderId,
+        receiverId: recipientId,
+        timestamp,
+      };
 
-      // Remove the notification after 5 seconds
-      setTimeout(() => {
-        setNotifications((prev) =>
-          prev.filter((notification) => notification !== newNotification)
-        );
-      }, 3000);
+      if (
+        chatModalVisible &&
+        (senderId === recipientUser.id || recipientId === recipientUser.id)
+      ) {
+        // Update chat history directly with the new message
+        setChatHistory((prevHistory) => [...prevHistory, newMessage]);
+      } else {
+        // Handle notifications as before
+        const newNotification = {
+          senderId,
+          message,
+          timestamp,
+          isOpen: false,
+          username: senderUser ? senderUser.username : "Unknown",
+        };
+        setNotifications((prev) => [...prev, newNotification]);
 
-      // If the recipient's chat window is open, update the messages directly
-      if (chatModalVisible && recipientUser && recipientUser.id === senderId) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: timestamp,
-            text: message,
-            senderId: senderId,
-            username: onlineUsers.find((user) => user.id === senderId)
-              ?.username,
-            time: timestamp,
-          },
-        ]);
+        setTimeout(() => {
+          setNotifications((prev) =>
+            prev.filter((notification) => notification !== newNotification)
+          );
+        }, 3000);
       }
     };
 
@@ -83,7 +92,7 @@ function Members() {
     return () => {
       socket.off("private_message", handlePrivateMessage);
     };
-  }, [chatModalVisible, senderUser, recipientUser, onlineUsers]);
+  }, [chatModalVisible, senderUser, recipientUser]);
 
   //---------------------------------------------------------
   useEffect(() => {
@@ -112,32 +121,44 @@ function Members() {
     sendPrivateMessage(
       senderUser.id,
       recipientUser.id,
-      data.text,
+      data.content,
       data.timestamp
     );
-  };
 
+    // Optimistically update the chat history with the new message
+    const newMessage = {
+      content: data.content,
+      senderId: senderUser.id,
+      receiverId: recipientUser.id,
+      timestamp: data.timestamp,
+    };
+    setChatHistory((prevHistory) => [...prevHistory, newMessage]);
+
+    // fetchChatHistory(senderUser.id, recipientUser.id);
+  };
+  // ---------------------------------------------------------
   const handleMemberClick = (user) => {
     setViewedUser(user);
   };
-
+  // ---------------------------------------------------------
   const handleClose = () => {
     setViewedUser(null);
     setRecipientUser(null);
     setChatModalVisible(false);
   };
-
+  // ---------------------------------------------------------
   const handleChat = (userId) => {
     handleClose();
     const userObject = onlineUsers.find((u) => u.id === userId);
     setRecipientUser(userObject);
+    fetchChatHistory(userId, userObject.id);
     setChatModalVisible(true);
   };
-
+  // ---------------------------------------------------------
   const handleCloseChatModal = () => {
     setChatModalVisible(false);
   };
-
+  // ---------------------------------------------------------
   const goToProfile = () => {
     navigate("/profile");
   };
@@ -148,37 +169,25 @@ function Members() {
         Profile
       </button>
 
-      {notifications.map((notification, index) => {
-        const senderUsername =
-          onlineUsers.find((user) => user.id === notification.senderId)
-            ?.username || "Unknown";
-        const displayMessage =
-          notification.message.length > 30
-            ? `${notification.message.substring(0, 30)}...`
-            : notification.message;
-
-        return (
-          <div
-            key={index}
-            onClick={() => handleNotificationClick(notification.senderId)}
-            className="notification-popup"
-          >
-            {`${senderUsername}: ${displayMessage}`}
-          </div>
-        );
-      })}
+      {notifications.map((notification, index) => (
+        <div
+          key={index}
+          onClick={() => handleNotificationClick(notification.senderId)}
+          className="notification-popup"
+        >
+          {`${notification.username}: ${notification.message}`}
+        </div>
+      ))}
 
       {chatModalVisible && (
         <ChatModal
           onClose={handleCloseChatModal}
           recipientUser={recipientUser}
           senderUser={senderUser}
-          incomingMessages={messages}
+          incomingMessages={chatHistory}
           msgData={handleMsgData}
         />
       )}
-
-      <h1>Online Users</h1>
       <div className="members-container">
         {onlineUsers.map((user) => (
           <Member

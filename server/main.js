@@ -15,6 +15,7 @@ const socketController = require("./controllers/socketController");
 const userRouter = require("./routers/userRouter");
 const authRouter = require("./routers/authRouter");
 const userImageRouter = require("./routers/userImageRouter");
+const chatRouter = require("./routers/chatRouter");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use(express.static(path.join(__dirname, "../client/dist")));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/user-images", userImageRouter);
+app.use("/chat", chatRouter);
 const http = require("http").createServer(app);
 socketController(http);
 

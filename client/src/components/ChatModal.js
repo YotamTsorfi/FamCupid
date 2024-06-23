@@ -5,46 +5,25 @@ const ChatModal = ({
   onClose,
   recipientUser,
   senderUser,
-  msgData,
   incomingMessages = [],
+  msgData,
 }) => {
-  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    // Merge incomingMessages with existing messages, avoiding duplicates
-    setMessages((currentMessages) => {
-      const incomingUnique = incomingMessages.filter(
-        (incoming) =>
-          !currentMessages.some((current) => current.id === incoming.id)
-      );
-      return [...currentMessages, ...incomingUnique];
-    });
-  }, [incomingMessages]);
-
+  //--------------------Send Message--------------------
   const sendMessage = (e) => {
     e.preventDefault();
 
     if (input.trim()) {
-      const timestamp = Date.now();
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: timestamp,
-          text: input,
-          senderId: senderUser.id,
-          username: senderUser.username,
-          time: new Date(timestamp).toLocaleTimeString(),
-        },
-      ]);
-
       const inputObject = {
-        text: input,
-        timestamp: new Date(timestamp).toLocaleTimeString(),
+        content: input,
+        senderId: senderUser.id,
+        receiverId: recipientUser.id,
+        timestamp: new Date().toLocaleTimeString(),
       };
 
       //Send message to server (By Members.js)
@@ -52,7 +31,7 @@ const ChatModal = ({
       setInput("");
     }
   };
-
+  // -------------------Draggable Chat Window-------------------
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartPosition({
@@ -87,7 +66,16 @@ const ChatModal = ({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, handleMouseMove]);
+  // -------------------Draggable Chat Window-------------------
 
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }); // "dd/mm/yyyy, hh:mm"
+  };
+  //---------------------------------------------------------------
   return (
     <div
       className="chat-window"
@@ -108,10 +96,11 @@ const ChatModal = ({
       <button className="close-chat" onClick={onClose}>
         Close
       </button>
+
       <div className="messages-area">
-        {messages.map((message) => (
+        {incomingMessages.map((message, index) => (
           <div
-            key={message.id}
+            key={index}
             className={`message ${
               message.senderId === senderUser.id ? "sent" : "received"
             }`}
@@ -122,11 +111,14 @@ const ChatModal = ({
                 : recipientUser.username}
               :
             </strong>{" "}
-            {message.text}
-            <div className="message-timestamp">{message.time}</div>
+            {message.content}
+            <div className="message-timestamp">
+              {formatDate(message.timestamp)}
+            </div>
           </div>
         ))}
       </div>
+
       <form className="input-area" onSubmit={sendMessage}>
         <input
           type="text"

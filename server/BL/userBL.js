@@ -1,5 +1,4 @@
 const { UserModel } = require("../model/userModel");
-const bcrypt = require("bcrypt");
 
 const getUsers = () => {
   return UserModel.find();
