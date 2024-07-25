@@ -68,6 +68,28 @@ justify-content: space-between;
 width: 300px; 
 }
 
+.sign-in-buttons-container {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  align-items: center; /* Center buttons vertically */
+  gap: 10px; /* Add space between buttons */
+}
+
+.sign-in-buttons-container button {
+  padding: 10px 20px; /* Add padding inside the buttons */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Add rounded corners */
+  background-color: #007bff; /* Set background color */
+  color: white; /* Set text color */
+  font-size: 16px; /* Set font size */
+  cursor: pointer; /* Change mouse cursor on hover */
+  transition: background-color 0.3s; /* Smooth background color change on hover */
+}
+
+.sign-in-buttons-container button:hover {
+  background-color: #0056b3; /* Change background color on hover */
+}
+
 .or-text {
 align-self: center;
 padding:  10px;

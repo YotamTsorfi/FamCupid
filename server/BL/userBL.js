@@ -21,6 +21,10 @@ const setUserRefreshToken = (id, refreshToken) => {
   return UserModel.findByIdAndUpdate(id, { refreshToken: refreshToken });
 };
 
+const setUserProviderId = (id, providerId) => {
+  return UserModel.findByIdAndUpdate(id, { providerId: providerId });
+};
+
 const getUserByRefreshToken = (refreshToken) => {
   return UserModel.findOne({ refreshToken: refreshToken });
 };
@@ -33,6 +37,10 @@ const setUserBio = (id, bio) => {
   return UserModel.findByIdAndUpdate(id, { bio: bio });
 };
 
+const getUserByEmail = (email) => {
+  return UserModel.findOne({ email: email });
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -42,4 +50,6 @@ module.exports = {
   getUserByRefreshToken,
   setUserImage,
   setUserBio,
+  getUserByEmail,
+  setUserProviderId,
 };

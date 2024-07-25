@@ -9,9 +9,9 @@ function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const navigate = useNavigate();
-  const user = useUser();
 
   useUserProfile();
+  const user = useUser();
 
   if (error) {
     return <div>Error: {error}</div>;

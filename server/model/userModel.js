@@ -14,7 +14,7 @@ const UserSchema = new mongoose.Schema({
   matches: [String],
   imageUrl: { type: String },
   refreshToken: { type: String },
-  //email: { type: String },
+  email: { type: String },
 });
 
 const UserModel = mongoose.model("users", UserSchema);

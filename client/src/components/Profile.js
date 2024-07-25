@@ -20,8 +20,14 @@ function Profile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [key, setKey] = useState("details");
   const [userBio, setUserBio] = useState(bio || "");
+  const [userPhotoUrl, setUserPhotoUrl] = useState(photoUrl);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Update userPhotoUrl if photoUrl changes
+    setUserPhotoUrl(photoUrl);
+  }, [photoUrl]);
 
   useEffect(() => {
     setUserBio(bio || "");
@@ -102,18 +108,27 @@ function Profile() {
         return (
           <div className="fade-in" key={key}>
             <h3>Uploaded photos</h3>
-            {images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt="Uploaded"
-                className="profile-photo"
-                onClick={() => {
-                  setSelectedImage(image);
-                  setIsModalOpen(true);
-                }}
-              />
-            ))}
+            <div className="photos-container">
+              {images.map((image, index) => (
+                <div key={index} className="uploaded-photo-container">
+                  <button
+                    className="set-profile-photo-btn"
+                    onClick={() => setAsProfilePhoto(image)}
+                  >
+                    Set as Profile Photo
+                  </button>
+                  <img
+                    src={image}
+                    alt="Uploaded"
+                    className="profile-photo"
+                    onClick={() => {
+                      setSelectedImage(image);
+                      setIsModalOpen(true);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
 
             <Modal
               isOpen={isModalOpen}
@@ -152,12 +167,41 @@ function Profile() {
     }
   };
 
+  const setAsProfilePhoto = async (imageUrl) => {
+    try {
+      const photoKey = imageUrl
+        .split(process.env.REACT_APP_S3_BUCKET_BASE_URL)[1]
+        .split("?")[0];
+
+      const response = await axios.put(
+        `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}/profile-photo`,
+        { photoKey: photoKey },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Profile photo updated successfully");
+        setUserPhotoUrl(imageUrl);
+      } else {
+        throw new Error("Failed to update profile photo");
+      }
+    } catch (error) {
+      console.error("Error setting profile photo: ", error);
+      toast.error("Failed to set profile photo");
+    }
+  };
+
   const handleFileDelete = async (imageUrl) => {
     try {
       const imageKey = imageUrl.split("/").pop().split("?")[0];
 
       const response = await axios.delete(
-        `http://localhost:3001/user-images/${userId}/${imageKey}`,
+        `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}/${imageKey}`,
+        // `http://localhost:3001/user-images/${userId}/${imageKey}`,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -226,7 +270,7 @@ function Profile() {
         Chat Online Members
       </button>
       <h1>Profile</h1>
-      <img className="profile-photo" src={photoUrl} alt={username} />
+      <img className="profile-photo" src={userPhotoUrl} alt={username} />
       <Tabs
         id="controlled-tab-example"
         activeKey={key}

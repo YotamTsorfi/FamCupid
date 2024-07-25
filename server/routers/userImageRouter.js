@@ -22,7 +22,7 @@ const s3 = new S3Client({
   },
   region: process.env.AWS_BUCKET_REGION,
 });
-
+//------------------------------------------------------------------
 //localhost:3001/user-images/:userId
 router.get("/:userId", async (req, res) => {
   try {
@@ -53,7 +53,7 @@ router.get("/:userId", async (req, res) => {
     res.status(500).send(err);
   }
 });
-
+//------------------------------------------------------------------
 //localhost:3001/user-images
 router.post(
   "/",
@@ -103,7 +103,7 @@ router.post(
     }
   }
 );
-
+//------------------------------------------------------------------
 //localhost:3001/user-images/:userId/:imageKey
 router.delete("/:userId/:imageKey", ensureAuthenticated, async (req, res) => {
   try {
@@ -134,6 +134,30 @@ router.delete("/:userId/:imageKey", ensureAuthenticated, async (req, res) => {
     }
   } catch (err) {
     console.error("Error in DELETE /user-images/:userId/:imageKey: ", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+//------------------------------------------------------------------
+// PUT /user-images/:userId/profile-photo
+router.put("/:userId/profile-photo", ensureAuthenticated, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { photoKey } = req.body;
+
+    // Validate user
+    const user = await userBL.getUserById(userId);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Update the user's profile photo URL
+    user.photoUrl = photoKey;
+    await user.save();
+
+    res.status(200).send({ message: "Profile photo updated successfully" });
+  } catch (err) {
+    console.error("Error in PUT /user-images/:userId/profile-photo: ", err);
     res.status(500).send("Internal server error");
   }
 });
