@@ -153,19 +153,19 @@ function Groups() {
       >
         Create Group
       </button>
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={handleCloseModal}
-        contentLabel="Group Chat"
-        className={"small-modal"}
-      >
-        {selectedGroup ? (
-          <Group
-            group={selectedGroup}
-            onClose={handleCloseModal}
-            onDelete={handleDeleteGroup}
-          />
-        ) : (
+      {selectedGroup ? (
+        <Group
+          group={selectedGroup}
+          onClose={handleCloseModal}
+          onDelete={handleDeleteGroup}
+        />
+      ) : (
+        <Modal
+          isOpen={isModalOpen}
+          onRequestClose={handleCloseModal}
+          contentLabel="Group Chat"
+          className={"small-modal"}
+        >
           <div>
             <h2 className="modal-title">Create a Group</h2>
             <input
@@ -193,8 +193,8 @@ function Groups() {
             <button onClick={handleCreateGroup}>Create Group</button>
             <button onClick={handleCloseModal}>Close</button>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
       <h2>Group List</h2>
       <div className="group-list">
         {groups.map((group) => (

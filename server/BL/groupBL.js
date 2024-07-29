@@ -16,7 +16,14 @@ const createGroup = async (groupData) => {
     });
 
     await group.save();
-    return group;
+
+    // Populate members before returning the group
+    const populatedGroup = await GroupModel.findById(group._id).populate(
+      "members",
+      "username"
+    );
+
+    return populatedGroup;
   } catch (error) {
     console.error("Error in createGroup function:", error);
     throw new Error(`Error creating group: ${error.message}`);
@@ -64,7 +71,7 @@ const listGroupsByUserId = async (userId) => {
 
 const getGroups = async () => {
   try {
-    const groups = await GroupModel.find({});
+    const groups = await GroupModel.find({}).populate("members");
     return groups;
   } catch (error) {
     throw new Error(`Error fetching groups: ${error.message}`);
@@ -84,6 +91,16 @@ const deleteGroup = async (groupId) => {
   }
 };
 
+const getGroupById = async (groupId) => {
+  try {
+    const group = await GroupModel.findById(groupId).populate("members");
+    return group;
+  } catch (error) {
+    console.error("Error in getGroupById function:", error);
+    throw new Error(`Error fetching group: ${error.message}`);
+  }
+};
+
 module.exports = {
   createGroup,
   addUserToGroup,
@@ -91,4 +108,5 @@ module.exports = {
   listGroupsByUserId,
   getGroups,
   deleteGroup,
+  getGroupById,
 };
