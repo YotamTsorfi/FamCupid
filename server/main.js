@@ -16,6 +16,7 @@ const userRouter = require("./routers/userRouter");
 const authRouter = require("./routers/authRouter");
 const userImageRouter = require("./routers/userImageRouter");
 const chatRouter = require("./routers/chatRouter");
+const groupRouter = require("./routers/groupRouter");
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/user-images", userImageRouter);
 app.use("/chat", chatRouter);
+app.use("/groups", groupRouter);
 const http = require("http").createServer(app);
 socketController(http);
 

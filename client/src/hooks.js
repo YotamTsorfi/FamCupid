@@ -43,6 +43,7 @@ export function useLogin() {
         photoUrl: userData.photoUrl,
         photosUrls: userData.photosUrls,
         bio: userData.bio,
+        email: userData.email,
       })
     );
   };

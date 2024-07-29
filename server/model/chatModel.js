@@ -2,12 +2,20 @@ const mongoose = require("mongoose");
 mongoose.set("strictQuery", true);
 
 const ChatSchema = new mongoose.Schema({
-  participants: [String],
+  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }], // Reference to User model
   messages: [
     {
       content: { type: String, required: true },
-      senderId: { type: String, required: true },
-      receiverId: { type: String, required: true },
+      senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+        required: true,
+      }, // Reference to User model
+      receiverId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+        required: true,
+      }, // Reference to User model
       timestamp: { type: Date, required: true },
     },
   ],

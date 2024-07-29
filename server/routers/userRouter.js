@@ -2,7 +2,7 @@ const userBL = require("../BL/userBL");
 const express = require("express");
 const router = express.Router();
 
-//http://localhost:3000/users
+//http://localhost:3001/users
 router.get("/", async (req, res) => {
   try {
     const users = await userBL.getUsers();
@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-//http://localhost:3000/users/1
+//http://localhost:3001/users/1
 router.get("/:id", async (req, res) => {
   try {
     const user = await userBL.getUserById(req.params.id);
@@ -22,7 +22,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-//http://localhost:3000/users/:id/bio
+//http://localhost:3001/users/:id/bio
 router.put("/:id/bio", async (req, res) => {
   try {
     const user = await userBL.setUserBio(req.params.id, req.body.bio);

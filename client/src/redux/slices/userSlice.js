@@ -21,6 +21,7 @@ export const userSlice = createSlice({
       state.photoUrl = action.payload.photoUrl;
       state.photosUrls = action.payload.photosUrls;
       state.bio = action.payload.bio;
+      state.email = action.payload.email;
       state.error = null;
     },
     logout: (state) => {

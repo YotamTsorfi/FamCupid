@@ -22,7 +22,7 @@ passport.use(
               providerId: profile.id,
               // add any other data you want to store
               photoUrl: profile.photos[0].value,
-              //email: profile.emails ? profile.emails[0].value : null,
+              email: profile.emails ? profile.emails[0].value : null,
             };
             // Create a new user
             UserBL.createUser(newUser)
@@ -61,7 +61,7 @@ passport.use(
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL: process.env.FACEBOOK_REDIRECT_URI,
-      profileFields: ["id", "displayName", "email", "picture.type(large)"],
+      profileFields: ["id", "displayName", "emails", "picture.type(large)"],
     },
     function (accessToken, refreshToken, profile, cb) {
       UserBL.getUserByProviderId(profile.id)
@@ -75,7 +75,7 @@ passport.use(
               providerId: profile.id,
               // add any other data you want to store
               photoUrl: profile.photos ? profile.photos[0].value : null,
-              //email: profile.emails ? profile.emails[0].value : null,
+              email: profile.emails ? profile.emails[0].value : null,
             };
             // Create a new user
             UserBL.createUser(newUser)

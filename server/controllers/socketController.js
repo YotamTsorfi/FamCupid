@@ -1,8 +1,11 @@
 const ChatBL = require("../BL/chatBL");
+const GroupBL = require("../BL/groupBL");
+const UserBL = require("../BL/userBL");
 const socketIO = require("socket.io");
 const users = {};
 
 function socketController(server) {
+  // Create socket server
   const io = socketIO(server, {
     cors: {
       origin: process.env.CLIENT_URL,
@@ -10,14 +13,9 @@ function socketController(server) {
       credentials: true,
     },
   });
-
+  //---------------------------
+  // Handle socket connection
   io.on("connection", (socket) => {
-    // console.log(`User connected: ${socket.id}`);
-
-    // socket.on("send_nice_message", (data) => {
-    //   socket.broadcast.emit("received_message", data);
-    // });
-
     // Handle user login
     socket.on("login", (user) => {
       // Check that the user object contains all the necessary properties
@@ -36,7 +34,7 @@ function socketController(server) {
       const user = users[userId];
       return user ? io.sockets.sockets.get(user.socketId) : null;
     }
-
+    //---------------------------
     // Handle private message event
     socket.on(
       "private_message",
@@ -58,7 +56,7 @@ function socketController(server) {
         }
       }
     );
-
+    //---------------------------
     // Store message in database
     function storeMessage(senderId, recipientId, message, timestamp) {
       const messageObj = {
@@ -73,7 +71,7 @@ function socketController(server) {
         // console.log("Message stored successfully:", message);
       });
     }
-
+    //---------------------------
     // Handle user disconnect
     socket.on("disconnect", () => {
       // Find user associated with the socket and remove them from online users list
@@ -85,7 +83,86 @@ function socketController(server) {
       // Emit updated online users list
       io.emit("onlineUsers", Object.values(users));
     });
+    //---------------------------Group Chat
+    // Handle group creation
+    socket.on("create_group", async ({ groupId, groupName, creatorId }) => {
+      try {
+        const group = await GroupBL.createGroup(groupId, groupName, creatorId);
+        io.emit("group_created", group);
+      } catch (error) {
+        console.error("Error creating group:", error.message);
+      }
+    });
+
+    // Handle joining a group
+    socket.on("join_group", async ({ groupId, userId }) => {
+      try {
+        const group = await GroupBL.addUserToGroup(groupId, userId);
+        io.emit("group_updated", group);
+      } catch (error) {
+        console.error("Error joining group:", error.message);
+      }
+    });
+
+    // Handle leaving a group
+    socket.on("leave_group", async ({ groupId, userId }) => {
+      try {
+        const group = await GroupBL.removeUserFromGroup(groupId, userId);
+        io.emit("group_updated", group);
+      } catch (error) {
+        console.error("Error leaving group:", error.message);
+      }
+    });
+
+    // Handle listing groups
+    socket.on("list_groups", async (userId) => {
+      try {
+        const userGroups = await GroupBL.listGroupsByUserId(userId);
+        console.log("Server - user_groups: ", userGroups);
+        socket.emit("user_groups", userGroups);
+      } catch (error) {
+        console.error("Error listing groups:", error.message);
+      }
+    });
+
+    socket.on("block_user", async ({ userId, blockedUserId }) => {
+      try {
+        await UserBL.blockUser(userId, blockedUserId);
+        socket.emit("user_blocked", { userId, blockedUserId });
+      } catch (error) {
+        console.error("Error blocking user:", error.message);
+      }
+    });
+
+    // Handle unblocking a user
+    socket.on("unblock_user", async ({ userId, blockedUserId }) => {
+      try {
+        await UserBL.unblockUser(userId, blockedUserId);
+        socket.emit("user_unblocked", { userId, blockedUserId });
+      } catch (error) {
+        console.error("Error unblocking user:", error.message);
+      }
+    });
+
+    // Handle fetching chat history
+    socket.on("fetch_chat_history", async (userId) => {
+      try {
+        const chatHistory = await ChatBL.getChatHistory(userId);
+        socket.emit("chat_history", chatHistory);
+      } catch (error) {
+        console.error("Error fetching chat history:", error.message);
+      }
+    });
+
+    socket.on("fetch_registered_users", async () => {
+      try {
+        const users = await UserBL.getUsers();
+        socket.emit("registered_users", users);
+      } catch (error) {
+        console.error("Error fetching registered users:", error.message);
+      }
+    });
+    //------------------------------------------------------------
   });
 }
-
 module.exports = socketController;

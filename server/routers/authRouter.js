@@ -118,6 +118,7 @@ router.get("/profile", async (req, res) => {
       photosUrls: user.photosUrls,
       token: token,
       bio: user.bio,
+      email: user.email,
     });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -137,7 +138,10 @@ router.get("/profile", async (req, res) => {
 //-----------------------------------------------------------------------------
 //localhost:3001/auth/google
 // For development, use the following line
-router.get("/google", passport.authenticate("google", { scope: ["profile"] }));
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
 // For production, use the following line
 // router.get(
@@ -314,7 +318,7 @@ router.post("/register", async (req, res) => {
       console.log("Creating user with username:", username);
 
       const user = await userBL.createUser({
-        email,
+        email: email,
         username: username,
         password: hashedPassword,
         provider: "local",

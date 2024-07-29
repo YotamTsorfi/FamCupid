@@ -52,7 +52,6 @@ function UserDetails({ user, onClose, onChat }) {
                 <img
                   src={signedUrls[currentImageIndex]}
                   alt={`${currentImageIndex + 1}`}
-                  style={{ width: "150%", height: "150%" }}
                   className="reduce-cursor"
                 />
               </div>
@@ -60,9 +59,8 @@ function UserDetails({ user, onClose, onChat }) {
               <img
                 src={signedUrls[currentImageIndex]}
                 alt={`${currentImageIndex + 1}`}
-                style={{ maxWidth: "200px", maxHeight: "220px" }}
                 onClick={toggleImageEnlargement}
-                className={!isImageEnlarged ? "enlarge-cursor" : ""}
+                className="enlarge-cursor"
               />
             )}
             <button onClick={prevImage}>&lt;</button>

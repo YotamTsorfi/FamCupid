@@ -7,6 +7,7 @@ import Login from "./components/Login";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
 import Members from "./components/Members";
+import Groups from "./components/Groups";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/members" element={<Members />} />
+          <Route path="/groups" element={<Groups />} />
         </Routes>
       </Router>
     </Provider>

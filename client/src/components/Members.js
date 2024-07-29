@@ -1,14 +1,17 @@
 import { useUserProfile, useUser } from "../hooks";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { sendPrivateMessage } from "../services/socketServices";
-import { login } from "../services/socketServices";
-import socket from "../services/socket";
 import Member from "./Member";
 import UserDetails from "./UserDetails";
 import ChatModal from "./ChatModal";
 import axios from "axios";
 import "./css/Members.css";
+import {
+  login,
+  sendPrivateMessage,
+  onEvent,
+  offEvent,
+} from "../services/socketServices";
 
 function Members() {
   const { userId, username, photoUrl, bio } = useUser();
@@ -87,12 +90,12 @@ function Members() {
       }
     };
 
-    socket.on("private_message", handlePrivateMessage);
+    onEvent("private_message", handlePrivateMessage);
 
     return () => {
-      socket.off("private_message", handlePrivateMessage);
+      offEvent("private_message", handlePrivateMessage);
     };
-  }, [chatModalVisible, senderUser, recipientUser]);
+  }, [chatModalVisible, senderUser, recipientUser, onlineUsers]);
 
   //---------------------------------------------------------
   useEffect(() => {
@@ -107,13 +110,13 @@ function Members() {
       setSenderUser(user);
     }
 
-    socket.on("onlineUsers", (users) => {
+    onEvent("onlineUsers", (users) => {
       const otherUsers = users.filter((u) => u.id !== user.id);
       setOnlineUsers(otherUsers);
     });
 
     return () => {
-      socket.off("onlineUsers");
+      offEvent("onlineUsers");
     };
   }, [userId, username, photoUrl, bio]);
   //---------------------------------------------------------
@@ -165,6 +168,7 @@ function Members() {
 
   return (
     <div>
+      <div className="user-identification">Logged in as: {username}</div>
       <button className="go-profile-button" onClick={goToProfile}>
         Profile
       </button>

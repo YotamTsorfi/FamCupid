@@ -1,0 +1,80 @@
+.small-modal {
+  width: 30%;
+  height: 60%;
+  margin: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgb(56, 211, 216);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  z-index: 1000; /* Ensure it's above the overlay */
+}
+
+.create-group-button {
+  background-color: #2b43af;
+  border: none;
+  color: rgb(255, 255, 255);
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.create-group-button:hover {
+  background-color: #7285c7;
+}
+
+.user-list label {
+  color: #333;
+}
+
+.modal-title {
+  color: blue;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  width: 20%;
+  margin-left: 0;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.group-item {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.group-button {
+  background-color: #a82844;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.group-button:hover {
+  background-color: #d16d8b;
+}

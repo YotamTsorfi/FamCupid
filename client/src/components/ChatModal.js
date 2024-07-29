@@ -8,7 +8,6 @@ const ChatModal = ({
   incomingMessages = [],
   msgData,
 }) => {
-  // const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -23,7 +22,7 @@ const ChatModal = ({
         content: input,
         senderId: senderUser.id,
         receiverId: recipientUser.id,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toISOString(),
       };
 
       //Send message to server (By Members.js)

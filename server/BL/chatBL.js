@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { ChatModel } = require("../model/chatModel");
 
 const insertOrUpdateChat = async (message) => {
@@ -8,14 +9,17 @@ const insertOrUpdateChat = async (message) => {
 
     const formattedMessage = {
       content: message.message,
-      senderId: message.senderId,
-      receiverId: message.recipientId,
-      timestamp: currentTime,
+      senderId: new mongoose.Types.ObjectId(message.senderId), // Convert to ObjectId
+      receiverId: new mongoose.Types.ObjectId(message.recipientId), // Convert to ObjectId
+      timestamp: new Date(message.timestamp),
     };
 
     // Step 1: Define a unique identifier for the chat based on participant IDs
     // Assuming senderId and receiverId are always in the same order for a unique chat
-    const participantIds = [message.senderId, message.recipientId].sort();
+    const participantIds = [
+      new mongoose.Types.ObjectId(message.senderId), // Convert to ObjectId
+      new mongoose.Types.ObjectId(message.recipientId), // Convert to ObjectId
+    ].sort();
 
     // Step 2: Check for an existing chat using the sorted participant IDs
     let chat = await ChatModel.findOne({
@@ -45,7 +49,10 @@ const insertOrUpdateChat = async (message) => {
 const getChatHistory = async (senderId, receiverId) => {
   try {
     // Sort the participant IDs to match the order in the database
-    const participantIds = [senderId, receiverId].sort();
+    const participantIds = [
+      new mongoose.Types.ObjectId(senderId), // Convert to ObjectId
+      new mongoose.Types.ObjectId(receiverId), // Convert to ObjectId
+    ].sort();
 
     // Query the database for the chat document
     const chat = await ChatModel.findOne({

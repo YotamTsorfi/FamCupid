@@ -11,7 +11,7 @@ import "./css/Profile.css";
 Modal.setAppElement("#root");
 
 function Profile() {
-  const { userId, username, photoUrl, bio, token } = useUser();
+  const { userId, username, photoUrl, bio, token, email } = useUser();
   useUserProfile();
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -91,6 +91,7 @@ function Profile() {
       case "details":
         return (
           <div className="fade-in" key={key}>
+            <p>Email: {email}</p>
             <h2>Bio</h2>
             <textarea
               className="textarea-fixed"
@@ -169,9 +170,26 @@ function Profile() {
 
   const setAsProfilePhoto = async (imageUrl) => {
     try {
-      const photoKey = imageUrl
-        .split(process.env.REACT_APP_S3_BUCKET_BASE_URL)[1]
-        .split("?")[0];
+      if (!imageUrl) {
+        throw new Error("Image URL is undefined");
+      }
+
+      if (!process.env.REACT_APP_S3_BUCKET_BASE_URL) {
+        throw new Error("S3 Bucket Base URL is undefined");
+      }
+
+      let photoKey;
+      if (imageUrl.startsWith("blob:")) {
+        // Handle blob URL case
+        photoKey = imageUrl; // You might need to handle blob URLs differently
+      } else if (imageUrl.includes(process.env.REACT_APP_S3_BUCKET_BASE_URL)) {
+        // Handle S3 URL case
+        photoKey = imageUrl
+          .split(process.env.REACT_APP_S3_BUCKET_BASE_URL)[1]
+          .split("?")[0];
+      } else {
+        throw new Error("Image URL does not contain the S3 Bucket Base URL");
+      }
 
       const response = await axios.put(
         `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}/profile-photo`,
@@ -223,6 +241,7 @@ function Profile() {
     }
   };
 
+  //---------------------------------
   const handleFileUpload = async () => {
     if (!selectedFile) return;
 
@@ -268,6 +287,9 @@ function Profile() {
       </button>
       <button className="members-button" onClick={() => navigate("/members")}>
         Chat Online Members
+      </button>
+      <button className="groups-button" onClick={() => navigate("/groups")}>
+        Groups
       </button>
       <h1>Profile</h1>
       <img className="profile-photo" src={userPhotoUrl} alt={username} />

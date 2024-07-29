@@ -17,9 +17,10 @@ const StyledCard = styled(Card)(() => ({
 }));
 
 const StyledImg = styled("img")({
-  width: "100%",
-  height: "auto",
-  borderRadius: "50%",
+  width: "150px", // Fixed width
+  height: "150px", // Fixed height
+  objectFit: "center", // Ensures the image covers the area without distorting aspect ratio
+  borderRadius: "60%",
 });
 
 const OnlineIndicator = styled("div")({
