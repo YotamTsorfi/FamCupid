@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Modal from "react-modal";
 import "./css/Group.css";
 
@@ -13,14 +13,17 @@ function Group({ group, onClose, onDelete }) {
     dragRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
-  const handleMouseMove = (e) => {
-    if (dragging) {
-      setPosition({
-        x: e.clientX - dragRef.current.x,
-        y: e.clientY - dragRef.current.y,
-      });
-    }
-  };
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (dragging) {
+        setPosition({
+          x: e.clientX - dragRef.current.x,
+          y: e.clientY - dragRef.current.y,
+        });
+      }
+    },
+    [dragging]
+  );
 
   const handleMouseUp = () => {
     setDragging(false);
@@ -33,7 +36,8 @@ function Group({ group, onClose, onDelete }) {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragging]);
+  }, [handleMouseMove]);
+  //----------------------------------------------------------------
   return (
     <Modal
       isOpen={true}
@@ -41,8 +45,7 @@ function Group({ group, onClose, onDelete }) {
       overlayClassName="Overlay"
       style={{
         content: {
-          width: "50%",
-          maxWidth: "600px",
+          width: "30%",
           backgroundColor: "white",
           borderRadius: "8px",
           padding: "20px",
@@ -68,6 +71,13 @@ function Group({ group, onClose, onDelete }) {
         >
           Delete
         </button>
+      </div>
+      <div className="group-members">
+        {group.members.map((member, index) => (
+          <span key={index} className="member">
+            {member.username}
+          </span>
+        ))}
       </div>
       <hr />
       <div className="chat-container">
