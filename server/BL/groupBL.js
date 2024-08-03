@@ -1,6 +1,75 @@
 const mongoose = require("mongoose");
 const { GroupModel } = require("../model/groupModel");
 
+const getGroupMessages = async (groupId) => {
+  try {
+    // Validate input parameter
+    if (!groupId) {
+      throw new Error("Missing required parameter: groupId");
+    }
+
+    // Find the group by groupId and populate the members field
+    const group = await GroupModel.findById(groupId).populate("members");
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    return group.messages; // Return the group's messages array
+  } catch (error) {
+    console.error("Error in getGroupMessages function:", error);
+    throw new Error(`Error fetching group messages: ${error.message}`);
+  }
+};
+
+const insertGroupMessage = async (
+  groupId,
+  senderId,
+  content,
+  timestamp,
+  senderUsername
+) => {
+  try {
+    console.log(
+      "insertGroupMessage",
+      groupId,
+      senderId,
+      content,
+      timestamp,
+      senderUsername
+    );
+
+    // Validate input parameters
+    if (!groupId || !senderId || !content || !timestamp || !senderUsername) {
+      throw new Error("Missing required parameters");
+    }
+
+    // Find the group by groupId
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    // Create a new message object
+    const newMessage = {
+      senderId,
+      content,
+      timestamp,
+      senderUsername,
+    };
+
+    // Push the new message to the group's messages array
+    group.messages.push(newMessage);
+
+    // Save the updated group document
+    await group.save();
+
+    return group;
+  } catch (error) {
+    console.error("Error in insertGroupMessage function:", error);
+    throw new Error(`Error inserting group message: ${error.message}`);
+  }
+};
+
 const createGroup = async (groupData) => {
   try {
     const { groupName, members } = groupData;
@@ -101,6 +170,14 @@ const getGroupById = async (groupId) => {
   }
 };
 
+async function getGroupByIdWithMessagesPopulated(groupId) {
+  return await GroupModel.findById(groupId).populate({
+    path: "messages.senderId",
+    model: "users",
+    select: "username",
+  });
+}
+
 module.exports = {
   createGroup,
   addUserToGroup,
@@ -109,4 +186,7 @@ module.exports = {
   getGroups,
   deleteGroup,
   getGroupById,
+  insertGroupMessage,
+  getGroupMessages,
+  getGroupByIdWithMessagesPopulated,
 };

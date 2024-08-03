@@ -75,7 +75,44 @@ export function handleUserGroups(groups) {
   // Update your UI accordingly
 }
 
+// Function to send a group message
+export function sendGroupMessage(message) {
+  socket.emit("group_message", message);
+}
+
+// Function to handle incoming group messages
+// export function onGroupMessage(handler) {
+//   socket.on("group_message", handler);
+// }
+export const onGroupMessage = (callback) => {
+  console.log("onGroupMessage called, setting up callback");
+  socket.on("group_message", (message) => {
+    console.log("Message received in onGroupMessage:", message);
+    callback(message);
+  });
+};
+
+// Function to stop handling incoming group messages
+export const offGroupMessage = (callback) => {
+  console.log("offGroupMessage called, removing callback");
+  socket.off("group_message", callback);
+};
+
+let updateMessagesCallback = null;
+
+export function setUpdateMessagesCallback(callback) {
+  updateMessagesCallback = callback;
+}
+
+export function handleGroupMessages(messages) {
+  console.log("Group messages received:", messages);
+  if (updateMessagesCallback) {
+    updateMessagesCallback(messages);
+  }
+}
+
 // Attach event handlers to the socket
 socket.on("group_created", handleGroupCreated);
 socket.on("group_updated", handleGroupUpdated);
 socket.on("user_groups", handleUserGroups);
+socket.on("group_messages", handleGroupMessages);

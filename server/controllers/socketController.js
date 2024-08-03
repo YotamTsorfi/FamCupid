@@ -16,8 +16,53 @@ function socketController(server) {
   //---------------------------
   // Handle socket connection
   io.on("connection", (socket) => {
+    console.log("New client connected:", socket.id);
+    //-----------------------------------------Group Chat
+    socket.on("group_message", async (message) => {
+      const { groupId, senderId, content, timestamp, senderUsername } = message;
+      console.log("Received group message:", message);
+
+      try {
+        // Store message in database
+        await GroupBL.insertGroupMessage(
+          groupId,
+          senderId,
+          content,
+          timestamp,
+          senderUsername
+        );
+        console.log("Message stored in database");
+
+        // Fetch group with populated sender's username in messages
+        const group = await GroupBL.getGroupByIdWithMessagesPopulated(groupId);
+        console.log("Group fetched with populated messages:", group);
+
+        group.members.forEach((member) => {
+          const memberSocket = findSocketByUserId(member._id);
+          if (memberSocket) {
+            const messageWithUsername = {
+              ...message,
+              groupId,
+              senderUsername: group.messages.find(
+                (msg) => msg.senderId._id.toString() === senderId
+              ).senderId.username,
+            };
+            console.log(
+              "Emitting message to member:",
+              member._id,
+              messageWithUsername
+            );
+            memberSocket.emit("group_message", messageWithUsername);
+          }
+        });
+      } catch (error) {
+        console.error("Error handling group message:", error.message);
+      }
+    });
+
     // Handle user login
     socket.on("login", (user) => {
+      console.log("User logged in:", user);
       // Check that the user object contains all the necessary properties
       if (user && user.id && user.username && user.photoUrl && user.bio) {
         // Add user to online users list
@@ -30,6 +75,7 @@ function socketController(server) {
       }
     });
 
+    //---------------------------
     function findSocketByUserId(userId) {
       const user = users[userId];
       return user ? io.sockets.sockets.get(user.socketId) : null;
@@ -39,9 +85,15 @@ function socketController(server) {
     socket.on(
       "private_message",
       ({ senderId, recipientId, message, timestamp }) => {
+        console.log("Received private message:", {
+          senderId,
+          recipientId,
+          message,
+          timestamp,
+        });
+
         // Find recipient's socket
         const recipientSocket = findSocketByUserId(recipientId);
-
         if (recipientSocket) {
           //store message in database
           storeMessage(senderId, recipientId, message, timestamp);
@@ -67,13 +119,14 @@ function socketController(server) {
       };
 
       ChatBL.insertOrUpdateChat(messageObj).then((message) => {
-        console.log("Message stored.");
+        console.log("Message stored successfully:", message);
         // console.log("Message stored successfully:", message);
       });
     }
     //---------------------------
     // Handle user disconnect
     socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
       // Find user associated with the socket and remove them from online users list
       const userId = Object.keys(users).find(
         (key) => users[key].socketId === socket.id
@@ -86,6 +139,7 @@ function socketController(server) {
     //---------------------------Group Chat
     // Handle group creation
     socket.on("create_group", async ({ groupId, groupName, creatorId }) => {
+      console.log("Creating group:", { groupId, groupName, creatorId });
       try {
         const group = await GroupBL.createGroup(groupId, groupName, creatorId);
         io.emit("group_created", group);
@@ -94,18 +148,27 @@ function socketController(server) {
       }
     });
 
-    // Handle joining a group
-    socket.on("join_group", async ({ groupId, userId }) => {
+    // Handle join group event
+    socket.on("join_group", async (data) => {
+      console.log("Joining group:", data);
+
       try {
-        const group = await GroupBL.addUserToGroup(groupId, userId);
-        io.emit("group_updated", group);
+        // Extract groupId from the data object
+        const { groupId } = data;
+
+        // Fetch group messages
+        const messages = await GroupBL.getGroupMessages(groupId);
+
+        // Emit messages to the client
+        socket.emit("group_messages", messages);
       } catch (error) {
-        console.error("Error joining group:", error.message);
+        console.error("Error fetching group messages:", error.message);
       }
     });
 
     // Handle leaving a group
     socket.on("leave_group", async ({ groupId, userId }) => {
+      console.log("Leaving group:", { groupId, userId });
       try {
         const group = await GroupBL.removeUserFromGroup(groupId, userId);
         io.emit("group_updated", group);
@@ -116,6 +179,7 @@ function socketController(server) {
 
     // Handle listing groups
     socket.on("list_groups", async (userId) => {
+      console.log("Listing groups for user:", userId);
       try {
         const userGroups = await GroupBL.listGroupsByUserId(userId);
         console.log("Server - user_groups: ", userGroups);
@@ -126,6 +190,7 @@ function socketController(server) {
     });
 
     socket.on("block_user", async ({ userId, blockedUserId }) => {
+      console.log("Blocking user:", { userId, blockedUserId });
       try {
         await UserBL.blockUser(userId, blockedUserId);
         socket.emit("user_blocked", { userId, blockedUserId });
@@ -136,6 +201,7 @@ function socketController(server) {
 
     // Handle unblocking a user
     socket.on("unblock_user", async ({ userId, blockedUserId }) => {
+      console.log("Unblocking user:", { userId, blockedUserId });
       try {
         await UserBL.unblockUser(userId, blockedUserId);
         socket.emit("user_unblocked", { userId, blockedUserId });
@@ -146,6 +212,7 @@ function socketController(server) {
 
     // Handle fetching chat history
     socket.on("fetch_chat_history", async (userId) => {
+      console.log("Fetching chat history for user:", userId);
       try {
         const chatHistory = await ChatBL.getChatHistory(userId);
         socket.emit("chat_history", chatHistory);
@@ -155,6 +222,7 @@ function socketController(server) {
     });
 
     socket.on("fetch_registered_users", async () => {
+      console.log("Fetching registered users");
       try {
         const users = await UserBL.getUsers();
         socket.emit("registered_users", users);

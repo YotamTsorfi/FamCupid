@@ -8,24 +8,11 @@ import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import "./css/Groups.css";
 
-// import {
-//   createGroup,
-//   joinGroup,
-//   leaveGroup,
-//   listGroups,
-//   blockUser,
-//   unblockUser,
-//   fetchChatHistory,
-//   fetchRegisteredUsers,
-//   onEvent,
-//   offEvent,
-// } from "../services/socketServices";
-
 Modal.setAppElement("#root");
 
 function Groups() {
   useUserProfile();
-  const { token, username } = useUser();
+  const { token, username, userId } = useUser();
   const navigate = useNavigate();
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -155,6 +142,8 @@ function Groups() {
       </button>
       {selectedGroup ? (
         <Group
+          username={username}
+          userId={userId}
           group={selectedGroup}
           onClose={handleCloseModal}
           onDelete={handleDeleteGroup}
