@@ -13,22 +13,22 @@
 }
 
 .create-group-button {
-  background-color: #2b43af;
+  background-color: #4CAF50; /* Changed color to green */
   border: none;
-  color: rgb(255, 255, 255);
-  padding: 15px 32px;
+  color: white;
+  padding: 10px 20px; /* Adjusted padding */
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  margin: 4px 2px;
+  margin: 10px 0; /* Adjusted margin */
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 8px; /* Adjusted border-radius */
   transition: background-color 0.3s ease;
 }
 
 .create-group-button:hover {
-  background-color: #7285c7;
+  background-color: #45a049; /* Changed hover color */
 }
 
 .user-list label {

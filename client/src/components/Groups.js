@@ -43,6 +43,28 @@ function Groups() {
     fetchUsers();
   }, [token]);
 
+  // useEffect(() => {
+  //   // Fetch all groups from the database
+  //   const fetchGroups = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${process.env.REACT_APP_SOCKET_SERVER}/groups`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+  //       setGroups(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching groups:", error);
+  //       toast.error("Failed to fetch groups");
+  //     }
+  //   };
+
+  //   fetchGroups();
+  // }, [token]);
+
   useEffect(() => {
     // Fetch all groups from the database
     const fetchGroups = async () => {
@@ -55,7 +77,12 @@ function Groups() {
             },
           }
         );
-        setGroups(response.data);
+
+        // Filter groups to only include those the user is a member of
+        const userGroups = response.data.filter((group) =>
+          group.members.some((member) => member._id === userId)
+        );
+        setGroups(userGroups);
       } catch (error) {
         console.error("Error fetching groups:", error);
         toast.error("Failed to fetch groups");
@@ -63,7 +90,7 @@ function Groups() {
     };
 
     fetchGroups();
-  }, [token]);
+  }, [token, userId]);
 
   const handleCreateGroup = async () => {
     try {
@@ -124,29 +151,31 @@ function Groups() {
     }
   };
 
+  const handleLeaveGroup = (groupId) => {
+    setGroups(groups.filter((group) => group._id !== groupId));
+    setSelectedGroup(null);
+    handleCloseModal();
+  };
+
   return (
     <div>
       <div className="userName">Logged in as: {username}</div>
-      <button className="profile-button" onClick={() => navigate("/profile")}>
-        Profile
-      </button>
+      <div className="header-container">
+        <button className="profile-button" onClick={() => navigate("/profile")}>
+          Profile
+        </button>
+      </div>
+      <h1>Groups</h1> {/* Moved this line under the Profile button */}
       <ToastContainer />
-      <h1>Groups</h1>
-      <button
-        className="create-group-button"
-        onClick={() => {
-          setIsModalOpen(true);
-        }}
-      >
-        Create Group
-      </button>
       {selectedGroup ? (
         <Group
+          token={token}
           username={username}
           userId={userId}
           group={selectedGroup}
           onClose={handleCloseModal}
           onDelete={handleDeleteGroup}
+          onLeave={handleLeaveGroup}
         />
       ) : (
         <Modal
@@ -184,6 +213,14 @@ function Groups() {
           </div>
         </Modal>
       )}
+      <button
+        className="create-group-button"
+        onClick={() => {
+          setIsModalOpen(true);
+        }}
+      >
+        Create Group
+      </button>
       <h2>Group List</h2>
       <div className="group-list">
         {groups.map((group) => (

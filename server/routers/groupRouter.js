@@ -34,4 +34,18 @@ router.delete("/:groupId", async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+// Endpoint to leave a group
+router.patch("/:groupId/leave", async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { userId } = req.body;
+    const updatedGroup = await GroupBL.leaveGroup(groupId, userId);
+    res.status(200).send(updatedGroup);
+  } catch (error) {
+    console.error("Error in router while leaving group:", error);
+    res.status(500).send(error.message);
+  }
+});
+
 module.exports = router;

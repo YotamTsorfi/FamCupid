@@ -2,18 +2,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px;
+  padding: 0.25em; /* Reduced padding */
   background-color: #81aae7;
   position: relative;
 }
 
 .group-modal-button {
-  margin: 0 5px;
-  padding: 8px 16px;
+  margin: 0 0.25em; /* Reduced margin */
+  padding: 0.25em 0.5em; /* Reduced padding */
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-size: 0.8em; /* Reduced font size */
 }
 
 .group-modal-button.group-close {
@@ -28,6 +29,7 @@
 .group-modal-title {
   flex: 1;
   text-align: center;
+  font-size: 1em; /* Reduced font size */
 }
 
 .group-modal-button.group-delete {
@@ -45,34 +47,61 @@
 }
 
 .group-chat-container {
-  height: 90%;
   display: flex;
   flex-direction: column;
+  height: calc(100% - 3em); /* Adjust height to account for chat input */
+  position: relative;
 }
 
 .group-chat-window {
-  display: flex;
-  flex-direction: column;
   flex: 1;
   overflow-y: auto;
-  width: 100%;
-  max-width: 85%;
-  max-height: 85%;
   background-color: #e6ddd3;
   color: #000;
   font-weight: bold;
+  font-size: 0.8em; /* Reduced font size */
   font-style: italic;
+  padding-bottom: 3em;
 }
 
+.group-chat-input {
+  display: flex;
+  padding: 0.5em; /* Reduced padding */
+  background-color: #f1f1f1;
+  width: 100%;
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+}
+
+.group-chat-input input {
+  flex: 1;
+  padding: 0.5em; /* Reduced padding */
+  margin-right: 0.5em; /* Reduced margin */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8em; /* Reduced font size */
+}
+
+.group-send-button {
+  padding: 0.5em 1em; /* Reduced padding */
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em; /* Reduced font size */
+}
 .group-chat-messages {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+
 .group-chat-message {
   margin-top: 0;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem; /* Reduced padding */
   border-bottom: 1px solid #ddd;
 }
 
@@ -84,42 +113,19 @@
 .group-message-username {
   color: #cc0000;
   font-weight: bold;
+  font-size: 0.8em; /* Reduced font size */
 }
 
 .group-message-date {
-  font-size: 0.8em;
+  font-size: 0.7em; /* Reduced font size */
   color: #888;
 }
 
 .group-message-content {
   white-space: pre-wrap;
+  font-size: 0.8em; /* Reduced font size */
 }
 
-.group-chat-input {
-  display: flex;
-  padding: 10px;
-  background-color: #f1f1f1;
-  position: absolute;
-  bottom: 0;
-  width: 90%;
-}
-
-.group-chat-input input {
-  flex: 1;
-  padding: 10px;
-  margin-right: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.group-send-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
 
 .group-send-button:hover {
   background-color: #0056b3;
@@ -128,8 +134,8 @@
 .group-members {
   display: flex;
   flex-wrap: wrap;
-  margin: 10px 0;
-  padding: 10px;
+  margin: 0.5em 0; /* Reduced margin */
+  padding: 0.5em; /* Reduced padding */
   background-color: #f9f9f9;
   border-radius: 8px;
 }
@@ -137,8 +143,49 @@
 .group-member {
   background-color: #007bff;
   color: white;
-  padding: 5px 10px;
-  margin: 5px;
+  padding: 0.25em 0.5em; /* Reduced padding */
+  margin: 0.25em; /* Reduced margin */
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 0.8em; /* Reduced font size */
+}
+
+@media (max-width: 768px) {
+  .group-chat-container {
+    height: 70%;
+  }
+
+  .group-chat-input {
+    width: 100%;
+  }
+}
+
+.group-modal-button {
+  padding: 4px 8px; /* Reduced padding */
+  margin: 5px;
+  border: none;
+  border-radius: 4px; /* Reduced border radius */
+  font-size: 14px; /* Reduced font size */
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.group-leave {
+  background-color: #ffcc00;
+  color: white;
+}
+
+.group-leave:hover {
+  background-color: #ff9900;
+  color: #fff;
+}
+
+
+.header-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adjust the gap between elements as needed */
+}
+
+.header-container h1 {
+  margin: 0; /* Remove default margin from the title */
 }

@@ -178,6 +178,25 @@ async function getGroupByIdWithMessagesPopulated(groupId) {
   });
 }
 
+const leaveGroup = async (groupId, userId) => {
+  try {
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    group.members = group.members.filter(
+      (memberId) => memberId.toString() !== userId
+    );
+
+    const updatedGroup = await group.save();
+    return updatedGroup;
+  } catch (error) {
+    console.error("Error in BL while leaving group:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createGroup,
   addUserToGroup,
@@ -189,4 +208,5 @@ module.exports = {
   insertGroupMessage,
   getGroupMessages,
   getGroupByIdWithMessagesPopulated,
+  leaveGroup,
 };
