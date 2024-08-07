@@ -13,7 +13,16 @@ import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 import "./css/Group.css";
 
-function Group({ token, username, userId, group, onClose, onDelete, onLeave }) {
+function Group({
+  token,
+  username,
+  userId,
+  group,
+  onClose,
+  onDelete,
+  onLeave,
+  onNewMessage,
+}) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLeaving, setIsLeaving] = useState(false);
@@ -28,21 +37,22 @@ function Group({ token, username, userId, group, onClose, onDelete, onLeave }) {
 
   const handleGroupMessage = useCallback(
     (message) => {
-      console.log("Received message:", message);
+      // console.log("Received message:", message);
       if (message.groupId === group._id) {
         const sender = group.members.find(
           (member) => member._id === message.senderId
         );
         const senderUsername = sender ? sender.username : "Unknown";
-        console.log("Sender found:", sender);
-        console.log("Sender username:", senderUsername);
+        // console.log("Sender found:", sender);
+        // console.log("Sender username:", senderUsername);
         setMessages((prevMessages) => [
           ...prevMessages,
           { ...message, senderUsername },
         ]);
+        onNewMessage(message);
       }
     },
-    [group, setMessages]
+    [group, setMessages, onNewMessage]
   );
 
   useEffect(() => {

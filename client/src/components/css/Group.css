@@ -18,12 +18,12 @@
 }
 
 .group-modal-button.group-close {
-  background-color: #ff4d4d;
+  background-color: #729faf;
   color: white;
 }
 
 .group-modal-button.group-close:hover {
-  background-color: #cc0000;
+  background-color: #618592;
 }
 
 .group-modal-title {
@@ -33,12 +33,12 @@
 }
 
 .group-modal-button.group-delete {
-  background-color: #ffcc00;
+  background-color: #ff4d4d;  
   color: black;
 }
 
-.group-modal-button.group-delete:hover {
-  background-color: #e6b800;
+.group-modal-button.group-delete:hover {  
+  background-color: #ca3f3f;
 }
 
 .group-hr {
@@ -170,12 +170,12 @@
 }
 
 .group-leave {
-  background-color: #ffcc00;
+  background-color: #dbbe4a;
   color: white;
 }
 
 .group-leave:hover {
-  background-color: #ff9900;
+  background-color: #c7b785;
   color: #fff;
 }
 

@@ -20,6 +20,7 @@ function Groups() {
   const [groups, setGroups] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  // const [newMessage, setNewMessage] = useState(null);
 
   useEffect(() => {
     // Fetch all users from the database
@@ -42,28 +43,6 @@ function Groups() {
 
     fetchUsers();
   }, [token]);
-
-  // useEffect(() => {
-  //   // Fetch all groups from the database
-  //   const fetchGroups = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${process.env.REACT_APP_SOCKET_SERVER}/groups`,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         }
-  //       );
-  //       setGroups(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching groups:", error);
-  //       toast.error("Failed to fetch groups");
-  //     }
-  //   };
-
-  //   fetchGroups();
-  // }, [token]);
 
   useEffect(() => {
     // Fetch all groups from the database
@@ -157,6 +136,11 @@ function Groups() {
     handleCloseModal();
   };
 
+  const handleNewMessage = (message) => {
+    setSelectedGroup(groups.find((group) => group._id === message.groupId));
+    setIsModalOpen(true);
+  };
+
   return (
     <div>
       <div className="userName">Logged in as: {username}</div>
@@ -165,7 +149,7 @@ function Groups() {
           Home
         </button>
       </div>
-      <h1>Groups</h1> {/* Moved this line under the Profile button */}
+      <h1>Groups</h1>
       <ToastContainer />
       {selectedGroup ? (
         <Group
@@ -176,6 +160,7 @@ function Groups() {
           onClose={handleCloseModal}
           onDelete={handleDeleteGroup}
           onLeave={handleLeaveGroup}
+          onNewMessage={handleNewMessage}
         />
       ) : (
         <Modal

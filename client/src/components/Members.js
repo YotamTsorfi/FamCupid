@@ -162,9 +162,6 @@ function Members() {
     setChatModalVisible(false);
   };
   // ---------------------------------------------------------
-  const goToProfile = () => {
-    navigate("/profile");
-  };
 
   return (
     <div>

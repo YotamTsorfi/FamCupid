@@ -61,17 +61,17 @@ export function fetchChatHistory(userId, callback) {
 
 // Event handlers
 export function handleGroupCreated(group) {
-  console.log("Group created:", group);
+  // console.log("Group created:", group);
   // Update your UI accordingly
 }
 
 export function handleGroupUpdated(group) {
-  console.log("Group updated:", group);
+  // console.log("Group updated:", group);
   // Update your UI accordingly
 }
 
 export function handleUserGroups(groups) {
-  console.log("User groups:", groups);
+  // console.log("User groups:", groups);
   // Update your UI accordingly
 }
 
@@ -85,16 +85,16 @@ export function sendGroupMessage(message) {
 //   socket.on("group_message", handler);
 // }
 export const onGroupMessage = (callback) => {
-  console.log("onGroupMessage called, setting up callback");
+  // console.log("onGroupMessage called, setting up callback");
   socket.on("group_message", (message) => {
-    console.log("Message received in onGroupMessage:", message);
+    // console.log("Message received in onGroupMessage:", message);
     callback(message);
   });
 };
 
 // Function to stop handling incoming group messages
 export const offGroupMessage = (callback) => {
-  console.log("offGroupMessage called, removing callback");
+  // console.log("offGroupMessage called, removing callback");
   socket.off("group_message", callback);
 };
 
@@ -105,7 +105,7 @@ export function setUpdateMessagesCallback(callback) {
 }
 
 export function handleGroupMessages(messages) {
-  console.log("Group messages received:", messages);
+  //console.log("Group messages received:", messages);
   if (updateMessagesCallback) {
     updateMessagesCallback(messages);
   }
