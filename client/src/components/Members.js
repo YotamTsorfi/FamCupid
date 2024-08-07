@@ -169,8 +169,8 @@ function Members() {
   return (
     <div>
       <div className="user-identification">Logged in as: {username}</div>
-      <button className="go-profile-button" onClick={goToProfile}>
-        Profile
+      <button className="go-home-button" onClick={() => navigate("/home")}>
+        Home
       </button>
 
       {notifications.map((notification, index) => (
@@ -206,6 +206,7 @@ function Members() {
           user={viewedUser}
           onClose={handleClose}
           onChat={handleChat}
+          currentUser={{ id: userId, username, photoUrl, bio }}
         />
       )}
     </div>

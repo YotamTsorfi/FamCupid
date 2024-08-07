@@ -41,6 +41,34 @@ const getUserByEmail = (email) => {
   return UserModel.findOne({ email: email });
 };
 
+const blockUser = async (userId, blockUserId) => {
+  await UserModel.findByIdAndUpdate(userId, {
+    $addToSet: { blockedUsers: blockUserId },
+  });
+  await UserModel.findByIdAndUpdate(blockUserId, {
+    $addToSet: { blockedByUsers: userId },
+  });
+};
+
+const unblockUser = async (userId, unblockUserId) => {
+  await UserModel.findByIdAndUpdate(userId, {
+    $pull: { blockedUsers: unblockUserId },
+  });
+  await UserModel.findByIdAndUpdate(unblockUserId, {
+    $pull: { blockedByUsers: userId },
+  });
+};
+
+const isBlocked = async (userId, blockedUserId) => {
+  const user = await UserModel.findById(userId);
+  return user.blockedUsers.includes(blockedUserId);
+};
+
+const isBlockedBy = async (userId, blockedByUserId) => {
+  const user = await UserModel.findById(userId);
+  return user.blockedByUsers.includes(blockedByUserId);
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -52,4 +80,8 @@ module.exports = {
   setUserBio,
   getUserByEmail,
   setUserProviderId,
+  blockUser,
+  unblockUser,
+  isBlocked,
+  isBlockedBy,
 };

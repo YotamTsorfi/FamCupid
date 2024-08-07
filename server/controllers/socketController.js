@@ -62,7 +62,7 @@ function socketController(server) {
 
     // Handle user login
     socket.on("login", (user) => {
-      console.log("User logged in:", user);
+      console.log("User logged in:", user.username);
       // Check that the user object contains all the necessary properties
       if (user && user.id && user.username && user.photoUrl && user.bio) {
         // Add user to online users list

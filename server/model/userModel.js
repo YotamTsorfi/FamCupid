@@ -15,6 +15,8 @@ const UserSchema = new mongoose.Schema({
   imageUrl: { type: String },
   refreshToken: { type: String },
   email: { type: String },
+  blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  blockedByUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 const UserModel = mongoose.model("users", UserSchema);

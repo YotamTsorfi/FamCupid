@@ -161,8 +161,8 @@ function Groups() {
     <div>
       <div className="userName">Logged in as: {username}</div>
       <div className="header-container">
-        <button className="profile-button" onClick={() => navigate("/profile")}>
-          Profile
+        <button className="go-home-button" onClick={() => navigate("/home")}>
+          Home
         </button>
       </div>
       <h1>Groups</h1> {/* Moved this line under the Profile button */}

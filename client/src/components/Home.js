@@ -51,7 +51,14 @@ function Home() {
         <button className="profile-button" onClick={handleProfileRedirect}>
           Profile
         </button>
-
+        <br />
+        <br />
+        <button className="members-button" onClick={() => navigate("/members")}>
+          Chat Online Members
+        </button>
+        <button className="groups-button" onClick={() => navigate("/groups")}>
+          Groups
+        </button>
         <br />
 
         {isLoggedIn && (

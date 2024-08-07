@@ -285,12 +285,6 @@ function Profile() {
       <button className="go-home-button" onClick={goHome}>
         Home
       </button>
-      <button className="members-button" onClick={() => navigate("/members")}>
-        Chat Online Members
-      </button>
-      <button className="groups-button" onClick={() => navigate("/groups")}>
-        Groups
-      </button>
       <h1>Profile</h1>
       <img className="profile-photo" src={userPhotoUrl} alt={username} />
       <Tabs
