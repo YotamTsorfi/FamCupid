@@ -3,8 +3,6 @@ import {
   sendGroupMessage,
   joinGroup,
   leaveGroup,
-  onGroupMessage,
-  offGroupMessage,
   setUpdateMessagesCallback,
 } from "../services/socketServices";
 import Modal from "react-modal";
@@ -21,7 +19,7 @@ function Group({
   onClose,
   onDelete,
   onLeave,
-  onNewMessage,
+  handleNewMessage,
 }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -35,51 +33,33 @@ function Group({
     }
   }, [messages]);
 
-  const handleGroupMessage = useCallback(
-    (message) => {
-      // console.log("Received message:", message);
-      if (message.groupId === group._id) {
-        const sender = group.members.find(
-          (member) => member._id === message.senderId
-        );
-        const senderUsername = sender ? sender.username : "Unknown";
-        // console.log("Sender found:", sender);
-        // console.log("Sender username:", senderUsername);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { ...message, senderUsername },
-        ]);
-        onNewMessage(message);
-      }
-    },
-    [group, setMessages, onNewMessage]
-  );
-
+  //----------------------------------------------------------------
   useEffect(() => {
     // Join the group when the component mounts
     joinGroup(group._id, userId);
 
-    // Listen for incoming group messages
-    onGroupMessage(handleGroupMessage);
-
     // Set the callback to update messages
-    setUpdateMessagesCallback(setMessages);
+    // setUpdateMessagesCallback(setMessages);
+    setUpdateMessagesCallback((newMessages) => {
+      setMessages(newMessages);
+      handleNewMessage(newMessages);
+    });
 
     // Cleanup on unmount
     return () => {
       if (isLeaving) {
         leaveGroup(group._id, userId);
       }
-      offGroupMessage(handleGroupMessage);
+      // offGroupMessage(handleGroupMessage);
       setUpdateMessagesCallback(null);
     };
-  }, [group._id, isLeaving, handleGroupMessage, userId]);
-
+  }, [group._id, isLeaving, userId, handleNewMessage]);
+  //----------------------------------------------------------------
   const handleClose = () => {
     setIsLeaving(false);
     onClose();
   };
-
+  //----------------------------------------------------------------
   const handleLeaveGroup = async () => {
     try {
       const response = await axios.patch(
@@ -104,7 +84,7 @@ function Group({
       toast.error("Failed to leave group");
     }
   };
-
+  //----------------------------------------------------------------
   const handleSendMessage = () => {
     const message = {
       groupId: group._id,
@@ -117,7 +97,7 @@ function Group({
     setMessages((prevMessages) => [...prevMessages, message]);
     setNewMessage("");
   };
-
+  //----------------------------------------------------------------
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSendMessage();
@@ -157,8 +137,8 @@ function Group({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [handleMouseMove, handleGroupMessage, userId]);
-
+  }, [handleMouseMove, userId]);
+  //----------------------------------------------------------------
   const getUsernameColor = (username) => {
     // Simple hash function to generate a color from a string
     let hash = 0;
@@ -178,10 +158,10 @@ function Group({
         overlayClassName="Overlay"
         style={{
           content: {
-            height: "70%", // Adjusted height to make it smaller
-            width: "45%", // Adjusted width to make it smaller
-            maxWidth: "90%", // Ensure it doesn't exceed the viewport width
-            maxHeight: "90%", // Ensure it doesn't exceed the viewport height
+            height: "70%",
+            width: "45%",
+            maxWidth: "90%",
+            maxHeight: "90%",
             backgroundColor: "white",
             borderRadius: "8px",
             padding: "20px",

@@ -20,8 +20,9 @@ function Groups() {
   const [groups, setGroups] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  // const [newMessage, setNewMessage] = useState(null);
+  const [group_messages, setGroup_messages] = useState([]);
 
+  //-------------------------
   useEffect(() => {
     // Fetch all users from the database
     const fetchUsers = async () => {
@@ -43,7 +44,7 @@ function Groups() {
 
     fetchUsers();
   }, [token]);
-
+  //-------------------------
   useEffect(() => {
     // Fetch all groups from the database
     const fetchGroups = async () => {
@@ -70,7 +71,7 @@ function Groups() {
 
     fetchGroups();
   }, [token, userId]);
-
+  //-------------------------
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
@@ -97,7 +98,7 @@ function Groups() {
       toast.error("Failed to create group");
     }
   };
-
+  //-------------------------
   const handleUserSelection = (userId) => {
     setSelectedUsers((prevSelectedUsers) =>
       prevSelectedUsers.includes(userId)
@@ -105,17 +106,17 @@ function Groups() {
         : [...prevSelectedUsers, userId]
     );
   };
-
+  //-------------------------
   const openGroupModal = (group) => {
     setSelectedGroup(group);
     setIsModalOpen(true);
   };
-
+  //-------------------------
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedGroup(null);
   };
-
+  //-------------------------
   const handleDeleteGroup = async (groupId) => {
     try {
       await axios.delete(
@@ -129,18 +130,19 @@ function Groups() {
       console.error("Error deleting group:", error);
     }
   };
-
+  //-------------------------
   const handleLeaveGroup = (groupId) => {
     setGroups(groups.filter((group) => group._id !== groupId));
     setSelectedGroup(null);
     handleCloseModal();
   };
 
-  const handleNewMessage = (message) => {
-    setSelectedGroup(groups.find((group) => group._id === message.groupId));
-    setIsModalOpen(true);
+  //-------------------------
+  const handleNewMessage = (newMessage) => {
+    // Update group_messages state with the new message
+    setGroup_messages((prevMessages) => [...prevMessages, newMessage]);
   };
-
+  //-------------------------
   return (
     <div>
       <div className="userName">Logged in as: {username}</div>
@@ -160,7 +162,7 @@ function Groups() {
           onClose={handleCloseModal}
           onDelete={handleDeleteGroup}
           onLeave={handleLeaveGroup}
-          onNewMessage={handleNewMessage}
+          handleNewMessage={handleNewMessage}
         />
       ) : (
         <Modal
