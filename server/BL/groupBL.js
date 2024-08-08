@@ -29,14 +29,14 @@ const insertGroupMessage = async (
   senderUsername
 ) => {
   try {
-    console.log(
-      "insertGroupMessage",
-      groupId,
-      senderId,
-      content,
-      timestamp,
-      senderUsername
-    );
+    // console.log(
+    //   "insertGroupMessage",
+    //   groupId,
+    //   senderId,
+    //   content,
+    //   timestamp,
+    //   senderUsername
+    // );
 
     // Validate input parameters
     if (!groupId || !senderId || !content || !timestamp || !senderUsername) {

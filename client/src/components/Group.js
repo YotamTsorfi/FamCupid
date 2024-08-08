@@ -26,6 +26,14 @@ function Group({
   const [isLeaving, setIsLeaving] = useState(false);
   const chatWindowRef = useRef(null);
 
+  // const memoizedHandleNewMessage = useCallback(
+  //   (newMessages) => {
+  //     setMessages(newMessages);
+  //     handleNewMessage(newMessages);
+  //   },
+  //   [handleNewMessage]
+  // );
+
   useEffect(() => {
     // Scroll to the bottom of the chat window whenever messages change
     if (chatWindowRef.current) {
@@ -39,11 +47,13 @@ function Group({
     joinGroup(group._id, userId);
 
     // Set the callback to update messages
-    // setUpdateMessagesCallback(setMessages);
-    setUpdateMessagesCallback((newMessages) => {
-      setMessages(newMessages);
-      handleNewMessage(newMessages);
-    });
+    setUpdateMessagesCallback(setMessages);
+
+    //TODO
+    // setUpdateMessagesCallback((newMessages) => {
+    //   setMessages(newMessages);
+    //   handleNewMessage(newMessages);
+    // });
 
     // Cleanup on unmount
     return () => {
@@ -53,7 +63,7 @@ function Group({
       // offGroupMessage(handleGroupMessage);
       setUpdateMessagesCallback(null);
     };
-  }, [group._id, isLeaving, userId, handleNewMessage]);
+  }, [group._id, isLeaving, userId]);
   //----------------------------------------------------------------
   const handleClose = () => {
     setIsLeaving(false);

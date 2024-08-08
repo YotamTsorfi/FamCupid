@@ -20,7 +20,7 @@ function socketController(server) {
     //-----------------------------------------Group Chat
     socket.on("group_message", async (message) => {
       const { groupId, senderId, content, timestamp, senderUsername } = message;
-      console.log("Received group message:", message);
+      // console.log("Received group message:", message);
 
       try {
         // Store message in database
@@ -35,7 +35,7 @@ function socketController(server) {
 
         // Fetch group with populated sender's username in messages
         const group = await GroupBL.getGroupByIdWithMessagesPopulated(groupId);
-        console.log("Group fetched with populated messages:", group);
+        // console.log("Group fetched with populated messages:", group);
 
         group.members.forEach((member) => {
           const memberSocket = findSocketByUserId(member._id);
