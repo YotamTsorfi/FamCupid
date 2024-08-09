@@ -35,24 +35,25 @@ function Groups() {
       setChatHistory([]);
     }
   }, [selectedGroup]);
-
   //-------------------------
+
   useEffect(() => {
-    if (selectedGroup) {
-      fetchChatHistory();
+    const handleGroupMessage = (message) => {
+      // console.log("Received group message From Server:", message);
 
-      socket.on("group_message", (message) => {
-        if (message.groupId === selectedGroup._id) {
-          setChatHistory((prevHistory) => [...prevHistory, message]);
-        }
-      });
+      if (selectedGroup && message.groupId === selectedGroup._id) {
+        setChatHistory((prevHistory) => [...prevHistory, message]);
+        setIsModalOpen(true); // Open the modal when a message is received
+      }
+    };
 
-      // Clean up the event listener on component unmount
-      return () => {
-        socket.off("group_message");
-      };
-    }
-  }, [selectedGroup, fetchChatHistory]);
+    socket.on("group_message", handleGroupMessage);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      socket.off("group_message", handleGroupMessage);
+    };
+  }, [selectedGroup]); // Add selectedGroup to the dependency array
 
   //-------------------------
   useEffect(() => {
@@ -137,17 +138,6 @@ function Groups() {
       socket.off("delete_group");
     };
   }, [selectedGroup]);
-  //-------------------------
-  useEffect(() => {
-    socket.on("group_message", (message) => {
-      setChatHistory((prevHistory) => [...prevHistory, message]);
-    });
-
-    // Clean up the event listener on component unmount
-    return () => {
-      socket.off("group_message");
-    };
-  }, []);
   //-------------------------
   const handleCreateGroup = async () => {
     try {
@@ -250,7 +240,6 @@ function Groups() {
     };
 
     socket.emit("group_message", message);
-    setChatHistory((prevHistory) => [...prevHistory, message]);
   };
   //-------------------------
   return (

@@ -8,27 +8,26 @@ function Group({
   username,
   userId,
   group,
+  incomingMessages,
   onClose,
   onDelete,
   onLeave,
   msgData,
-  chatHistory,
-  incomingMessages = [],
 }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState("");
   const chatWindowRef = useRef(null);
 
+  //----------------------------------------------------------------
   useEffect(() => {
+    // Update messages whenever incomingMessages change
+    setMessages(incomingMessages);
+
     // Scroll to the bottom of the chat window whenever messages change
     if (chatWindowRef.current) {
       chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
     }
-  }, [messages]);
-  //----------------------------------------------------------------
-  useEffect(() => {
-    setMessages(chatHistory);
-  }, [chatHistory]);
+  }, [incomingMessages]);
   //----------------------------------------------------------------
   const sendMessage = (e) => {
     e.preventDefault();
@@ -106,7 +105,7 @@ function Group({
         overlayClassName="Overlay"
         style={{
           content: {
-            height: "70%",
+            height: "80%",
             width: "50%",
             maxWidth: "50%",
             maxHeight: "80%",
@@ -153,24 +152,30 @@ function Group({
         <div className="group-chat-container">
           <div className="group-chat-window" ref={chatWindowRef}>
             <ul className="group-chat-messages">
-              {incomingMessages.map((message, index) => (
-                <li key={index} className="group-chat-message">
-                  <div className="group-message-header">
-                    <span
-                      className="group-message-username"
-                      style={{
-                        color: getUsernameColor(message.senderUsername),
-                      }}
-                    >
-                      {message.senderUsername}
-                    </span>
-                    <span className="group-message-date">
-                      {new Date(message.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="group-message-content">{message.content}</div>
-                </li>
-              ))}
+              {Array.isArray(messages) ? (
+                messages.map((message, index) => (
+                  <li key={index} className="group-chat-message">
+                    <div className="group-message-header">
+                      <span
+                        className="group-message-username"
+                        style={{
+                          color: getUsernameColor(message.senderUsername),
+                        }}
+                      >
+                        {message.senderUsername}
+                      </span>
+                      <span className="group-message-date">
+                        {new Date(message.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="group-message-content">
+                      {message.content}
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="group-chat-message">No messages available</li>
+              )}
             </ul>
           </div>
           <form className="group-chat-input" onSubmit={sendMessage}>

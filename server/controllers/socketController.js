@@ -45,12 +45,12 @@ function socketController(server) {
     socket.on(
       "private_message",
       ({ senderId, recipientId, message, timestamp }) => {
-        console.log("Received private message:", {
-          senderId,
-          recipientId,
-          message,
-          timestamp,
-        });
+        // console.log("Received private message:", {
+        //   senderId,
+        //   recipientId,
+        //   message,
+        //   timestamp,
+        // });
 
         // Find recipient's socket
         const recipientSocket = findSocketByUserId(recipientId);
@@ -133,7 +133,7 @@ function socketController(server) {
       io.emit("delete_group", groupId);
     });
 
-    // Handle group message event
+    //Handle group message event
     socket.on("group_message", async (message) => {
       const { groupId } = message;
 
@@ -142,11 +142,13 @@ function socketController(server) {
         console.log("Message stored in database");
 
         // Emit the message to all members of the group
-        io.to(groupId).emit("group_message", message);
+        console.log("Emitting group message to group:", groupId);
+        io.emit("group_message", message);
       } catch (error) {
         console.error("Error handling group message:", error.message);
       }
     });
+
     //------------------------------------------------------------
   });
 }
