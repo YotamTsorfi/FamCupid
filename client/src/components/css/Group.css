@@ -113,17 +113,17 @@
 .group-message-username {
   color: #cc0000;
   font-weight: bold;
-  font-size: 0.8em; /* Reduced font size */
+  font-size: 1em; /* Reduced font size */
 }
 
 .group-message-date {
-  font-size: 0.7em; /* Reduced font size */
+  font-size: 0.9em; /* Reduced font size */
   color: #888;
 }
 
 .group-message-content {
   white-space: pre-wrap;
-  font-size: 0.8em; /* Reduced font size */
+  font-size: 1em; /* Reduced font size */
 }
 
 

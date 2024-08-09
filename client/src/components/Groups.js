@@ -38,6 +38,13 @@ function Groups() {
   //-------------------------
 
   useEffect(() => {
+    if (selectedGroup) {
+      fetchChatHistory();
+    }
+  }, [selectedGroup, fetchChatHistory]);
+
+  //-------------------------
+  useEffect(() => {
     const handleGroupMessage = (message) => {
       // console.log("Received group message From Server:", message);
 
