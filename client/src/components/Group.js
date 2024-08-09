@@ -1,38 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  sendGroupMessage,
-  joinGroup,
-  leaveGroup,
-  setUpdateMessagesCallback,
-} from "../services/socketServices";
 import Modal from "react-modal";
-import { toast, ToastContainer } from "react-toastify";
-import axios from "axios";
+
 import "react-toastify/dist/ReactToastify.css";
 import "./css/Group.css";
 
 function Group({
-  token,
   username,
   userId,
   group,
   onClose,
   onDelete,
   onLeave,
-  handleNewMessage,
+  msgData,
+  chatHistory,
+  incomingMessages = [],
 }) {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isLeaving, setIsLeaving] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState("");
   const chatWindowRef = useRef(null);
-
-  // const memoizedHandleNewMessage = useCallback(
-  //   (newMessages) => {
-  //     setMessages(newMessages);
-  //     handleNewMessage(newMessages);
-  //   },
-  //   [handleNewMessage]
-  // );
 
   useEffect(() => {
     // Scroll to the bottom of the chat window whenever messages change
@@ -40,77 +25,31 @@ function Group({
       chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
     }
   }, [messages]);
-
   //----------------------------------------------------------------
   useEffect(() => {
-    // Join the group when the component mounts
-    joinGroup(group._id, userId);
-
-    // Set the callback to update messages
-    setUpdateMessagesCallback(setMessages);
-
-    //TODO
-    // setUpdateMessagesCallback((newMessages) => {
-    //   setMessages(newMessages);
-    //   handleNewMessage(newMessages);
-    // });
-
-    // Cleanup on unmount
-    return () => {
-      if (isLeaving) {
-        leaveGroup(group._id, userId);
-      }
-      // offGroupMessage(handleGroupMessage);
-      setUpdateMessagesCallback(null);
-    };
-  }, [group._id, isLeaving, userId]);
+    setMessages(chatHistory);
+  }, [chatHistory]);
   //----------------------------------------------------------------
-  const handleClose = () => {
-    setIsLeaving(false);
-    onClose();
-  };
-  //----------------------------------------------------------------
-  const handleLeaveGroup = async () => {
-    try {
-      const response = await axios.patch(
-        `${process.env.REACT_APP_SOCKET_SERVER}/groups/${group._id}/leave`,
-        { userId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  const sendMessage = (e) => {
+    e.preventDefault();
 
-      if (response.status === 200) {
-        setIsLeaving(true);
-        onLeave(group._id);
-        onClose();
-      } else {
-        throw new Error("Failed to leave group");
-      }
-    } catch (error) {
-      console.error("Error leaving group:", error);
-      toast.error("Failed to leave group");
-    }
-  };
-  //----------------------------------------------------------------
-  const handleSendMessage = () => {
     const message = {
       groupId: group._id,
       senderId: userId,
       senderUsername: username,
-      content: newMessage,
+      content: input,
       timestamp: new Date().toISOString(),
     };
-    sendGroupMessage(message);
-    setMessages((prevMessages) => [...prevMessages, message]);
-    setNewMessage("");
+
+    //Send message to server (By Groups.js)
+    msgData(message);
+    setInput("");
   };
   //----------------------------------------------------------------
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleSendMessage();
+      e.preventDefault();
+      sendMessage(e);
     }
   };
   //----------------------------------------------------------------
@@ -161,17 +100,16 @@ function Group({
   //----------------------------------------------------------------
   return (
     <div>
-      <ToastContainer />
       <Modal
         isOpen={true}
-        onRequestClose={handleClose}
+        onRequestClose={() => onClose()}
         overlayClassName="Overlay"
         style={{
           content: {
             height: "70%",
-            width: "45%",
-            maxWidth: "90%",
-            maxHeight: "90%",
+            width: "50%",
+            maxWidth: "50%",
+            maxHeight: "80%",
             backgroundColor: "white",
             borderRadius: "8px",
             padding: "20px",
@@ -198,7 +136,7 @@ function Group({
           </button>
           <button
             className="group-modal-button group-leave"
-            onClick={handleLeaveGroup}
+            onClick={() => onLeave(group._id)}
           >
             Leave Group
           </button>
@@ -215,7 +153,7 @@ function Group({
         <div className="group-chat-container">
           <div className="group-chat-window" ref={chatWindowRef}>
             <ul className="group-chat-messages">
-              {messages.map((message, index) => (
+              {incomingMessages.map((message, index) => (
                 <li key={index} className="group-chat-message">
                   <div className="group-message-header">
                     <span
@@ -235,18 +173,18 @@ function Group({
               ))}
             </ul>
           </div>
-          <div className="group-chat-input">
+          <form className="group-chat-input" onSubmit={sendMessage}>
             <input
               type="text"
               placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <button className="group-send-button" onClick={handleSendMessage}>
+            <button className="group-send-button" type="submit">
               Send
             </button>
-          </div>
+          </form>
         </div>
       </Modal>
     </div>

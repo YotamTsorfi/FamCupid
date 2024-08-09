@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { GroupModel } = require("../model/groupModel");
-
+//-------------------------------------------------------------------------
 const getGroupMessages = async (groupId) => {
   try {
     // Validate input parameter
@@ -20,25 +20,16 @@ const getGroupMessages = async (groupId) => {
     throw new Error(`Error fetching group messages: ${error.message}`);
   }
 };
-
-const insertGroupMessage = async (
-  groupId,
-  senderId,
-  content,
-  timestamp,
-  senderUsername
-) => {
+//-------------------------------------------------------------------------
+const insertGroupMessage = async (messageWrapper) => {
   try {
-    // console.log(
-    //   "insertGroupMessage",
-    //   groupId,
-    //   senderId,
-    //   content,
-    //   timestamp,
-    //   senderUsername
-    // );
+    // console.log("insertGroupMessage: ", messageWrapper);
+
+    // Extract the nested message object
+    const { message } = messageWrapper;
 
     // Validate input parameters
+    const { groupId, senderId, senderUsername, content, timestamp } = message;
     if (!groupId || !senderId || !content || !timestamp || !senderUsername) {
       throw new Error("Missing required parameters");
     }
@@ -52,9 +43,9 @@ const insertGroupMessage = async (
     // Create a new message object
     const newMessage = {
       senderId,
+      senderUsername,
       content,
       timestamp,
-      senderUsername,
     };
 
     // Push the new message to the group's messages array
@@ -69,7 +60,7 @@ const insertGroupMessage = async (
     throw new Error(`Error inserting group message: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const createGroup = async (groupData) => {
   try {
     const { groupName, members } = groupData;
@@ -98,7 +89,7 @@ const createGroup = async (groupData) => {
     throw new Error(`Error creating group: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const addUserToGroup = async (groupId, userId) => {
   try {
     const group = await GroupModel.findById(groupId);
@@ -114,7 +105,7 @@ const addUserToGroup = async (groupId, userId) => {
     throw new Error(`Error adding user to group: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const removeUserFromGroup = async (groupId, userId) => {
   try {
     const group = await GroupModel.findOne({ groupId });
@@ -128,7 +119,7 @@ const removeUserFromGroup = async (groupId, userId) => {
     throw new Error(`Error removing user from group: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const listGroupsByUserId = async (userId) => {
   try {
     const groups = await GroupModel.find({ members: userId });
@@ -137,7 +128,7 @@ const listGroupsByUserId = async (userId) => {
     throw new Error(`Error listing groups: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const getGroups = async () => {
   try {
     const groups = await GroupModel.find({}).populate("members");
@@ -146,7 +137,7 @@ const getGroups = async () => {
     throw new Error(`Error fetching groups: ${error.message}`);
   }
 };
-
+//-------------------------------------------------------------------------
 const deleteGroup = async (groupId) => {
   try {
     const result = await GroupModel.findByIdAndDelete(groupId);
@@ -160,6 +151,7 @@ const deleteGroup = async (groupId) => {
   }
 };
 
+//-------------------------------------------------------------------------
 const getGroupById = async (groupId) => {
   try {
     const group = await GroupModel.findById(groupId).populate("members");
@@ -170,6 +162,7 @@ const getGroupById = async (groupId) => {
   }
 };
 
+//-------------------------------------------------------------------------
 async function getGroupByIdWithMessagesPopulated(groupId) {
   return await GroupModel.findById(groupId).populate({
     path: "messages.senderId",
@@ -178,6 +171,7 @@ async function getGroupByIdWithMessagesPopulated(groupId) {
   });
 }
 
+//-------------------------------------------------------------------------
 const leaveGroup = async (groupId, userId) => {
   try {
     const group = await GroupModel.findById(groupId);

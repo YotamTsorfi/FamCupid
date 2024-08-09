@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useUserProfile, useUser } from "../hooks";
-import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import Group from "./Group";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Group from "./Group";
 import Modal from "react-modal";
+import socket from "../services/socket";
+import "react-toastify/dist/ReactToastify.css";
 import "./css/Groups.css";
 
 Modal.setAppElement("#root");
@@ -20,7 +21,38 @@ function Groups() {
   const [groups, setGroups] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [group_messages, setGroup_messages] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
+  //-------------------------
+  const fetchChatHistory = useCallback(async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_SOCKET_SERVER}/groups/groupHistory`,
+        { groupId: selectedGroup._id }
+      );
+      setChatHistory(response.data);
+    } catch (error) {
+      console.error("Failed to fetch chat history:", error);
+      setChatHistory([]);
+    }
+  }, [selectedGroup]);
+
+  //-------------------------
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchChatHistory();
+
+      socket.on("group_message", (message) => {
+        if (message.groupId === selectedGroup._id) {
+          setChatHistory((prevHistory) => [...prevHistory, message]);
+        }
+      });
+
+      // Clean up the event listener on component unmount
+      return () => {
+        socket.off("group_message");
+      };
+    }
+  }, [selectedGroup, fetchChatHistory]);
 
   //-------------------------
   useEffect(() => {
@@ -72,6 +104,51 @@ function Groups() {
     fetchGroups();
   }, [token, userId]);
   //-------------------------
+  useEffect(() => {
+    socket.on("new_group", (newGroup) => {
+      if (newGroup.members.some((member) => member._id === userId)) {
+        setGroups((prevGroups) => {
+          if (!prevGroups.some((group) => group._id === newGroup._id)) {
+            return [...prevGroups, newGroup];
+          }
+          return prevGroups;
+        });
+      }
+    });
+
+    return () => {
+      socket.off("new_group");
+    };
+  }, [userId]);
+  //-------------------------
+  useEffect(() => {
+    socket.on("delete_group", (deletedGroupId) => {
+      setGroups((prevGroups) =>
+        prevGroups.filter((group) => group._id !== deletedGroupId)
+      );
+
+      // Close the selected group if it is the one being deleted
+      if (selectedGroup && selectedGroup._id === deletedGroupId) {
+        handleCloseModal();
+      }
+    });
+
+    return () => {
+      socket.off("delete_group");
+    };
+  }, [selectedGroup]);
+  //-------------------------
+  useEffect(() => {
+    socket.on("group_message", (message) => {
+      setChatHistory((prevHistory) => [...prevHistory, message]);
+    });
+
+    // Clean up the event listener on component unmount
+    return () => {
+      socket.off("group_message");
+    };
+  }, []);
+  //-------------------------
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
@@ -90,6 +167,9 @@ function Groups() {
         setSelectedUsers([]);
         setIsModalOpen(false);
         setGroups([...groups, response.data]);
+
+        // Emit the new group event
+        socket.emit("new_group", response.data);
       } else {
         throw new Error("Failed to create group");
       }
@@ -126,21 +206,51 @@ function Groups() {
       setSelectedGroup(null);
       handleCloseModal();
       toast.success("Group deleted successfully");
+
+      // Emit the delete group event
+      socket.emit("delete_group", groupId);
     } catch (error) {
       console.error("Error deleting group:", error);
     }
   };
   //-------------------------
-  const handleLeaveGroup = (groupId) => {
-    setGroups(groups.filter((group) => group._id !== groupId));
-    setSelectedGroup(null);
-    handleCloseModal();
+  const handleLeaveGroup = async (groupId) => {
+    try {
+      const response = await axios.patch(
+        `${process.env.REACT_APP_SOCKET_SERVER}/groups/${groupId}/leave`,
+        { userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setSelectedGroup(null);
+        handleCloseModal();
+        setGroups(groups.filter((group) => group._id !== groupId));
+      } else {
+        throw new Error("Failed to leave group");
+      }
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      toast.error("Failed to leave group");
+    }
   };
 
   //-------------------------
-  const handleNewMessage = (newMessage) => {
-    // Update group_messages state with the new message
-    setGroup_messages((prevMessages) => [...prevMessages, newMessage]);
+  const handleMsgData = (data) => {
+    const message = {
+      groupId: selectedGroup._id,
+      senderId: userId,
+      senderUsername: username,
+      content: data.content,
+      timestamp: new Date().toISOString(),
+    };
+
+    socket.emit("group_message", message);
+    setChatHistory((prevHistory) => [...prevHistory, message]);
   };
   //-------------------------
   return (
@@ -159,10 +269,11 @@ function Groups() {
           username={username}
           userId={userId}
           group={selectedGroup}
+          incomingMessages={chatHistory}
           onClose={handleCloseModal}
           onDelete={handleDeleteGroup}
           onLeave={handleLeaveGroup}
-          handleNewMessage={handleNewMessage}
+          msgData={handleMsgData}
         />
       ) : (
         <Modal

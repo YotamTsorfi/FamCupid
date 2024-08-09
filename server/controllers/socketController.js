@@ -17,49 +17,8 @@ function socketController(server) {
   // Handle socket connection
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
-    //-----------------------------------------Group Chat
-    socket.on("group_message", async (message) => {
-      const { groupId, senderId, content, timestamp, senderUsername } = message;
-      // console.log("Received group message:", message);
 
-      try {
-        // Store message in database
-        await GroupBL.insertGroupMessage(
-          groupId,
-          senderId,
-          content,
-          timestamp,
-          senderUsername
-        );
-        console.log("Message stored in database");
-
-        // Fetch group with populated sender's username in messages
-        const group = await GroupBL.getGroupByIdWithMessagesPopulated(groupId);
-        // console.log("Group fetched with populated messages:", group);
-
-        group.members.forEach((member) => {
-          const memberSocket = findSocketByUserId(member._id);
-          if (memberSocket) {
-            const messageWithUsername = {
-              ...message,
-              groupId,
-              senderUsername: group.messages.find(
-                (msg) => msg.senderId._id.toString() === senderId
-              ).senderId.username,
-            };
-            console.log(
-              "Emitting message to member:",
-              member._id,
-              messageWithUsername
-            );
-            memberSocket.emit("group_message", messageWithUsername);
-          }
-        });
-      } catch (error) {
-        console.error("Error handling group message:", error.message);
-      }
-    });
-
+    //------------------------------------------------------------------------
     // Handle user login
     socket.on("login", (user) => {
       console.log("User logged in:", user.username);
@@ -81,6 +40,7 @@ function socketController(server) {
       return user ? io.sockets.sockets.get(user.socketId) : null;
     }
     //---------------------------
+
     // Handle private message event
     socket.on(
       "private_message",
@@ -109,7 +69,7 @@ function socketController(server) {
       }
     );
     //---------------------------
-    // Store message in database
+    // Store private message in database
     function storeMessage(senderId, recipientId, message, timestamp) {
       const messageObj = {
         senderId,
@@ -136,58 +96,6 @@ function socketController(server) {
       // Emit updated online users list
       io.emit("onlineUsers", Object.values(users));
     });
-    //---------------------------Group Chat
-    // Handle group creation
-    socket.on("create_group", async ({ groupId, groupName, creatorId }) => {
-      console.log("Creating group:", { groupId, groupName, creatorId });
-      try {
-        const group = await GroupBL.createGroup(groupId, groupName, creatorId);
-        io.emit("group_created", group);
-      } catch (error) {
-        console.error("Error creating group:", error.message);
-      }
-    });
-
-    // Handle join group event
-    socket.on("join_group", async (data) => {
-      console.log("Joining group:", data);
-
-      try {
-        // Extract groupId from the data object
-        const { groupId } = data;
-
-        // Fetch group messages
-        const messages = await GroupBL.getGroupMessages(groupId);
-
-        // Emit messages to the client
-        socket.emit("group_messages", messages);
-      } catch (error) {
-        console.error("Error fetching group messages:", error.message);
-      }
-    });
-
-    // Handle leaving a group
-    socket.on("leave_group", async ({ groupId, userId }) => {
-      console.log("Leaving group:", { groupId, userId });
-      try {
-        const group = await GroupBL.removeUserFromGroup(groupId, userId);
-        io.emit("group_updated", group);
-      } catch (error) {
-        console.error("Error leaving group:", error.message);
-      }
-    });
-
-    // Handle listing groups
-    socket.on("list_groups", async (userId) => {
-      console.log("Listing groups for user:", userId);
-      try {
-        const userGroups = await GroupBL.listGroupsByUserId(userId);
-        console.log("Server - user_groups: ", userGroups);
-        socket.emit("user_groups", userGroups);
-      } catch (error) {
-        console.error("Error listing groups:", error.message);
-      }
-    });
 
     socket.on("block_user", async ({ userId, blockedUserId }) => {
       console.log("Blocking user:", { userId, blockedUserId });
@@ -210,24 +118,33 @@ function socketController(server) {
       }
     });
 
-    // Handle fetching chat history
-    socket.on("fetch_chat_history", async (userId) => {
-      console.log("Fetching chat history for user:", userId);
-      try {
-        const chatHistory = await ChatBL.getChatHistory(userId);
-        socket.emit("chat_history", chatHistory);
-      } catch (error) {
-        console.error("Error fetching chat history:", error.message);
-      }
+    //---------------------------Group Chat
+
+    // Handle new group event
+    socket.on("new_group", (newGroup) => {
+      console.log("New group created:", newGroup);
+      // Broadcast the new group to all connected clients
+      io.emit("new_group", newGroup);
     });
 
-    socket.on("fetch_registered_users", async () => {
-      console.log("Fetching registered users");
+    socket.on("delete_group", (groupId) => {
+      console.log("Group deleted:", groupId);
+      // Broadcast the deleted group ID to all connected clients
+      io.emit("delete_group", groupId);
+    });
+
+    // Handle group message event
+    socket.on("group_message", async (message) => {
+      const { groupId } = message;
+
       try {
-        const users = await UserBL.getUsers();
-        socket.emit("registered_users", users);
+        await GroupBL.insertGroupMessage({ message });
+        console.log("Message stored in database");
+
+        // Emit the message to all members of the group
+        io.to(groupId).emit("group_message", message);
       } catch (error) {
-        console.error("Error fetching registered users:", error.message);
+        console.error("Error handling group message:", error.message);
       }
     });
     //------------------------------------------------------------

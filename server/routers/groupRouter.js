@@ -48,4 +48,15 @@ router.patch("/:groupId/leave", async (req, res) => {
   }
 });
 
+// Endpoint to fetch group messages
+router.post("/groupHistory", async (req, res) => {
+  const { groupId } = req.body;
+  try {
+    const messages = await GroupBL.getGroupMessages(groupId);
+    res.json(messages);
+  } catch (error) {
+    console.error("Error in getChatHistory route:", error);
+    res.status(500).send("Server error while retrieving chat history.");
+  }
+});
 module.exports = router;
