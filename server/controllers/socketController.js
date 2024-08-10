@@ -98,23 +98,22 @@ function socketController(server) {
     });
 
     socket.on("block_user", async ({ userId, blockedUserId }) => {
-      console.log("Blocking user:", { userId, blockedUserId });
+      // console.log("Server: Blocking user:", { userId, blockedUserId });
       try {
         await UserBL.blockUser(userId, blockedUserId);
-        socket.emit("user_blocked", { userId, blockedUserId });
+        io.emit("user_blocked", { userId, blockedUserId });
       } catch (error) {
-        console.error("Error blocking user:", error.message);
+        console.error("Server: Error blocking user:", error.message);
       }
     });
 
-    // Handle unblocking a user
     socket.on("unblock_user", async ({ userId, blockedUserId }) => {
-      console.log("Unblocking user:", { userId, blockedUserId });
+      // console.log("Server: Unblocking user:", { userId, blockedUserId });
       try {
         await UserBL.unblockUser(userId, blockedUserId);
-        socket.emit("user_unblocked", { userId, blockedUserId });
+        io.emit("user_unblocked", { userId, blockedUserId });
       } catch (error) {
-        console.error("Error unblocking user:", error.message);
+        console.error("Server: Error unblocking user:", error.message);
       }
     });
 

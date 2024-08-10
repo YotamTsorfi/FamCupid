@@ -25,7 +25,6 @@ function Members() {
 
   useUserProfile();
   const navigate = useNavigate();
-
   //---------------------------------------------------------
   const fetchChatHistory = async (senderId, receiverId) => {
     try {
@@ -136,8 +135,6 @@ function Members() {
       timestamp: data.timestamp,
     };
     setChatHistory((prevHistory) => [...prevHistory, newMessage]);
-
-    // fetchChatHistory(senderUser.id, recipientUser.id);
   };
   // ---------------------------------------------------------
   const handleMemberClick = (user) => {
@@ -161,8 +158,7 @@ function Members() {
   const handleCloseChatModal = () => {
     setChatModalVisible(false);
   };
-  // ---------------------------------------------------------
-
+  //---------------------------------------------------------
   return (
     <div>
       <div className="user-identification">Logged in as: {username}</div>

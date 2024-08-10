@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./css/UserDetails.css";
+import socket from "../services/socket";
 
 function UserDetails({ user, onClose, onChat, currentUser }) {
   const [signedUrls, setSignedUrls] = useState([]);
@@ -8,7 +9,38 @@ function UserDetails({ user, onClose, onChat, currentUser }) {
   const [isImageEnlarged, setIsImageEnlarged] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlockedBy, setIsBlockedBy] = useState(false);
+  //---------------------------------------------------------
+  useEffect(() => {
+    if (socket.connected) {
+      // Check if socket is connected
+      const handleBlockEvent = (data) => {
+        // console.log("Received block event:", data);
+        if (currentUser.id === data.blockedUserId) {
+          setIsBlockedBy(true);
+        }
+      };
 
+      const handleUnBlockEvent = (data) => {
+        // console.log("Received block event:", data);
+        if (currentUser.id === data.blockedUserId) {
+          setIsBlockedBy(false);
+        }
+      };
+
+      socket.on("user_blocked", handleBlockEvent);
+      socket.on("user_unblocked", handleUnBlockEvent);
+
+      return () => {
+        socket.off("user_blocked", handleBlockEvent);
+        socket.off("user_unblocked", handleUnBlockEvent);
+      };
+    } else {
+      console.warn(
+        "Socket connection not established yet. Blocking event handling might be delayed."
+      );
+    }
+  }, [currentUser.id, user.id]);
+  //---------------------------------------------------------
   useEffect(() => {
     const fetchSignedUrls = async () => {
       try {
@@ -23,7 +55,7 @@ function UserDetails({ user, onClose, onChat, currentUser }) {
 
     fetchSignedUrls();
   }, [user.id]);
-
+  //---------------------------------------------------------
   useEffect(() => {
     const checkIfBlocked = async () => {
       try {
@@ -35,7 +67,7 @@ function UserDetails({ user, onClose, onChat, currentUser }) {
         console.error("Error checking if user is blocked:", error);
       }
     };
-
+    //---------------------------------------------------------
     const checkIfBlockedBy = async () => {
       try {
         const response = await axios.get(
@@ -50,45 +82,45 @@ function UserDetails({ user, onClose, onChat, currentUser }) {
     checkIfBlocked();
     checkIfBlockedBy();
   }, [currentUser.id, user.id]);
-
+  //---------------------------------------------------------
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % signedUrls.length);
   };
-
+  //---------------------------------------------------------
   const prevImage = () => {
     setCurrentImageIndex(
       (prevIndex) => (prevIndex - 1 + signedUrls.length) % signedUrls.length
     );
   };
-
+  //---------------------------------------------------------
   const toggleImageEnlargement = () => {
     setIsImageEnlarged(!isImageEnlarged);
   };
-
+  //---------------------------------------------------------
   const handleBlockUser = async () => {
     try {
-      await axios.post(`${process.env.REACT_APP_SOCKET_SERVER}/users/block`, {
-        userId: currentUser.id,
-        blockUserId: user.id,
-      });
       setIsBlocked(true);
+      socket.emit("block_user", {
+        userId: currentUser.id,
+        blockedUserId: user.id,
+      });
     } catch (error) {
-      console.error("Error blocking user:", error);
+      console.error("Client: Error blocking user:", error);
     }
   };
-
+  //---------------------------------------------------------
   const handleUnblockUser = async () => {
     try {
-      await axios.post(`${process.env.REACT_APP_SOCKET_SERVER}/users/unblock`, {
-        userId: currentUser.id,
-        unblockUserId: user.id,
-      });
       setIsBlocked(false);
+      socket.emit("unblock_user", {
+        userId: currentUser.id,
+        blockedUserId: user.id,
+      });
     } catch (error) {
-      console.error("Error unblocking user:", error);
+      console.error("Client: Error unblocking user:", error);
     }
   };
-
+  //---------------------------------------------------------
   return (
     <div className="user-details-modal">
       <h2>{user.username}</h2>
