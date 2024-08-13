@@ -59,4 +59,16 @@ router.post("/groupHistory", async (req, res) => {
     res.status(500).send("Server error while retrieving chat history.");
   }
 });
+
+router.patch("/:groupId/members", async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { members } = req.body;
+    const updatedGroup = await GroupBL.updateGroupMembers(groupId, members);
+    res.status(200).send(updatedGroup);
+  } catch (error) {
+    console.error("Error in router while updating group members:", error);
+    res.status(500).send(error.message);
+  }
+});
 module.exports = router;

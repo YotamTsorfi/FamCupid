@@ -32,54 +32,54 @@ router.put("/:id/bio", async (req, res) => {
   }
 });
 
-//http://localhost:3001/users/is-blocked/:userId/:blockedUserId
-router.get("/is-blocked/:userId/:blockedUserId", async (req, res) => {
-  try {
-    const isBlocked = await userBL.isBlocked(
-      req.params.userId,
-      req.params.blockedUserId
-    );
-    res.status(200).send({ isBlocked });
-  } catch (error) {
-    res
-      .status(500)
-      .send({ message: "Error checking if user is blocked", error });
-  }
-});
+// //http://localhost:3001/users/is-blocked/:userId/:blockedUserId
+// router.get("/is-blocked/:userId/:blockedUserId", async (req, res) => {
+//   try {
+//     const isBlocked = await userBL.isBlocked(
+//       req.params.userId,
+//       req.params.blockedUserId
+//     );
+//     res.status(200).send({ isBlocked });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .send({ message: "Error checking if user is blocked", error });
+//   }
+// });
 
-//http://localhost:3001/users/is-blocked-by/:userId/:blockedByUserId
-router.get("/is-blocked-by/:userId/:blockedByUserId", async (req, res) => {
-  try {
-    const isBlockedBy = await userBL.isBlockedBy(
-      req.params.userId,
-      req.params.blockedByUserId
-    );
-    res.status(200).send({ isBlockedBy });
-  } catch (error) {
-    res
-      .status(500)
-      .send({ message: "Error checking if user is blocked by", error });
-  }
-});
+// //http://localhost:3001/users/is-blocked-by/:userId/:blockedByUserId
+// router.get("/is-blocked-by/:userId/:blockedByUserId", async (req, res) => {
+//   try {
+//     const isBlockedBy = await userBL.isBlockedBy(
+//       req.params.userId,
+//       req.params.blockedByUserId
+//     );
+//     res.status(200).send({ isBlockedBy });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .send({ message: "Error checking if user is blocked by", error });
+//   }
+// });
 
-//http://localhost:3001/users/block
-router.post("/block", async (req, res) => {
-  try {
-    await userBL.blockUser(req.body.userId, req.body.blockUserId);
-    res.status(200).send({ message: "User blocked successfully" });
-  } catch (error) {
-    res.status(500).send({ message: "Error blocking user", error });
-  }
-});
+// //http://localhost:3001/users/block
+// router.post("/block", async (req, res) => {
+//   try {
+//     await userBL.blockUser(req.body.userId, req.body.blockUserId);
+//     res.status(200).send({ message: "User blocked successfully" });
+//   } catch (error) {
+//     res.status(500).send({ message: "Error blocking user", error });
+//   }
+// });
 
-//http://localhost:3001/users/unblock
-router.post("/unblock", async (req, res) => {
-  try {
-    await userBL.unblockUser(req.body.userId, req.body.unblockUserId);
-    res.status(200).send({ message: "User unblocked successfully" });
-  } catch (error) {
-    res.status(500).send({ message: "Error unblocking user", error });
-  }
-});
+// //http://localhost:3001/users/unblock
+// router.post("/unblock", async (req, res) => {
+//   try {
+//     await userBL.unblockUser(req.body.userId, req.body.unblockUserId);
+//     res.status(200).send({ message: "User unblocked successfully" });
+//   } catch (error) {
+//     res.status(500).send({ message: "Error unblocking user", error });
+//   }
+// });
 
 module.exports = router;

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "./css/UserDetails.css";
 import socket from "../services/socket";
 
@@ -42,46 +41,23 @@ function UserDetails({ user, onClose, onChat, currentUser }) {
   }, [currentUser.id, user.id]);
   //---------------------------------------------------------
   useEffect(() => {
-    const fetchSignedUrls = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${user.id}`
-        );
-        setSignedUrls(response.data);
-      } catch (error) {
-        console.error("Error fetching signed URLs:", error);
-      }
+    const handleSignedUrls = (data) => {
+      setSignedUrls(data.urls);
     };
 
-    fetchSignedUrls();
+    socket.emit("getSignedUrls", { userId: user.id });
+
+    socket.on("signedUrls", handleSignedUrls);
+
+    socket.on("error", (error) => {
+      console.error("Socket.io error:", error);
+    });
+
+    return () => {
+      socket.off("signedUrls", handleSignedUrls);
+      socket.off("error");
+    };
   }, [user.id]);
-  //---------------------------------------------------------
-  useEffect(() => {
-    const checkIfBlocked = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/users/is-blocked/${currentUser.id}/${user.id}`
-        );
-        setIsBlocked(response.data.isBlocked);
-      } catch (error) {
-        console.error("Error checking if user is blocked:", error);
-      }
-    };
-    //---------------------------------------------------------
-    const checkIfBlockedBy = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/users/is-blocked-by/${currentUser.id}/${user.id}`
-        );
-        setIsBlockedBy(response.data.isBlockedBy);
-      } catch (error) {
-        console.error("Error checking if user is blocked by:", error);
-      }
-    };
-
-    checkIfBlocked();
-    checkIfBlockedBy();
-  }, [currentUser.id, user.id]);
   //---------------------------------------------------------
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % signedUrls.length);

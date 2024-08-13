@@ -190,7 +190,44 @@ const leaveGroup = async (groupId, userId) => {
     throw error;
   }
 };
+//-------------------------------------------------------------------------
+const updateGroupMembers = async (groupId, updatedMembers) => {
+  try {
+    // Validate input parameters
+    if (!groupId || !Array.isArray(updatedMembers)) {
+      throw new Error("Missing required parameters: groupId or updatedMembers");
+    }
 
+    // Convert member IDs to ObjectIds
+    const memberObjectIds = updatedMembers.map(
+      (memberId) => new mongoose.Types.ObjectId(memberId)
+    );
+
+    // Find the group by groupId
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    // Update the group's members
+    group.members = memberObjectIds;
+
+    // Save the updated group document
+    const updatedGroup = await group.save();
+
+    // Populate members before returning the group
+    const populatedGroup = await GroupModel.findById(updatedGroup._id).populate(
+      "members",
+      "username"
+    );
+
+    return populatedGroup;
+  } catch (error) {
+    console.error("Error in updateGroupMembers function:", error);
+    throw new Error(`Error updating group members: ${error.message}`);
+  }
+};
+//-------------------------------------------------------------------------
 module.exports = {
   createGroup,
   addUserToGroup,
@@ -203,4 +240,5 @@ module.exports = {
   getGroupMessages,
   getGroupByIdWithMessagesPopulated,
   leaveGroup,
+  updateGroupMembers,
 };

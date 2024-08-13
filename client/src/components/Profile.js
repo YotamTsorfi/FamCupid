@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, Tab } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import Modal from "react-modal";
-import axios from "axios";
+import socket from "../services/socket";
 import "react-toastify/dist/ReactToastify.css";
 import "./css/Profile.css";
 
@@ -23,60 +23,72 @@ function Profile() {
   const [userPhotoUrl, setUserPhotoUrl] = useState(photoUrl);
 
   const navigate = useNavigate();
-
+  //---------------------------------
   useEffect(() => {
     // Update userPhotoUrl if photoUrl changes
     setUserPhotoUrl(photoUrl);
   }, [photoUrl]);
-
+  //---------------------------------
   useEffect(() => {
     setUserBio(bio || "");
   }, [bio]);
-
+  //---------------------------------
   useEffect(() => {
     const savedTabKey = localStorage.getItem("activeTabKey");
     if (savedTabKey) {
       setKey(savedTabKey);
     }
   }, []);
-
+  //----------------------------------------
   useEffect(() => {
     if (userId) {
-      axios
-        .get(`${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}`)
-        .then((response) => {
-          setImages(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-          toast.error("Failed to fetch user images");
-        });
+      const handleSignedUrls = (data) => {
+        setImages(data.urls);
+      };
+
+      socket.emit("getSignedUrls", { userId: userId });
+
+      socket.on("signedUrls", handleSignedUrls);
+
+      socket.on("error", (error) => {
+        console.error("Socket.io error:", error);
+      });
+
+      return () => {
+        socket.off("signedUrls", handleSignedUrls);
+        socket.off("error");
+      };
     }
   }, [userId]);
 
+  //----------------------------------------
   const handleBioSave = async () => {
     try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_SOCKET_SERVER}/users/${userId}/bio`,
-        { bio: userBio },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      socket.emit("saveUserBio", { userId, bio: userBio, token });
 
-      if (response.status === 200) {
-        toast.success("Bio saved successfully");
-      } else {
-        throw new Error("Failed to save bio");
-      }
+      socket.on("bioSaved", (response) => {
+        if (response.status === 200) {
+          toast.success("Bio saved successfully");
+        } else {
+          throw new Error("Failed to save bio");
+        }
+      });
+
+      socket.on("error", (error) => {
+        console.error("Socket.io error:", error);
+        toast.error("Failed to save bio");
+      });
+
+      return () => {
+        socket.off("bioSaved");
+        socket.off("error");
+      };
     } catch (error) {
       console.error(error);
       toast.error("Failed to save bio");
     }
   };
-
+  //----------------------------------------
   const goHome = () => {
     navigate("/home");
   };
@@ -85,7 +97,7 @@ function Profile() {
     setKey(k);
     localStorage.setItem("activeTabKey", k);
   };
-
+  //---------------------------------
   const renderTabContent = () => {
     switch (key) {
       case "details":
@@ -167,7 +179,7 @@ function Profile() {
         return null;
     }
   };
-
+  //---------------------------------
   const setAsProfilePhoto = async (imageUrl) => {
     try {
       if (!imageUrl) {
@@ -191,90 +203,93 @@ function Profile() {
         throw new Error("Image URL does not contain the S3 Bucket Base URL");
       }
 
-      const response = await axios.put(
-        `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}/profile-photo`,
-        { photoKey: photoKey },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Emit the event to set the profile photo
+      socket.emit("setProfilePhoto", { userId, photoKey, token });
 
-      if (response.status === 200) {
+      // Listen for the success event
+      socket.once("setProfilePhotoSuccess", (data) => {
         toast.success("Profile photo updated successfully");
         setUserPhotoUrl(imageUrl);
-      } else {
-        throw new Error("Failed to update profile photo");
-      }
+      });
+
+      // Listen for the error event
+      socket.once("setProfilePhotoError", (error) => {
+        console.error("Error setting profile photo: ", error);
+        toast.error("Failed to set profile photo");
+      });
     } catch (error) {
       console.error("Error setting profile photo: ", error);
       toast.error("Failed to set profile photo");
     }
   };
+  //---------------------------------
+  const handleFileDelete = (imageUrl) => {
+    const imageKey = imageUrl.split("/").pop().split("?")[0];
 
-  const handleFileDelete = async (imageUrl) => {
-    try {
-      const imageKey = imageUrl.split("/").pop().split("?")[0];
+    socket.emit("deleteImage", { userId, imageKey, token });
 
-      const response = await axios.delete(
-        `${process.env.REACT_APP_SOCKET_SERVER}/user-images/${userId}/${imageKey}`,
-        // `http://localhost:3001/user-images/${userId}/${imageKey}`,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+    socket.once("deleteImageSuccess", () => {
       setImages(images.filter((image) => image !== imageUrl));
       setIsModalOpen(false);
       toast.success("Image deleted successfully");
-    } catch (error) {
+    });
+
+    socket.once("deleteImageError", (error) => {
       console.error("Error:", error);
       toast.error("Failed to delete image");
-    }
-  };
+    });
 
+    return () => {
+      socket.off("deleteImageSuccess");
+      socket.off("deleteImageError");
+    };
+  };
   //---------------------------------
   const handleFileUpload = async () => {
     if (!selectedFile) return;
 
     const formData = new FormData();
     formData.append("image", selectedFile);
+    formData.append("userId", userId);
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_SOCKET_SERVER}/user-images`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const file = selectedFile;
+      const userId = formData.get("userId");
 
-      if (response.status !== 200) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Read the file as an ArrayBuffer
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = () => {
+        const fileBuffer = reader.result;
 
-      const imageUrl = URL.createObjectURL(selectedFile);
-      setImages((prevImages) => [...prevImages, imageUrl]);
+        // Emit the file upload event with the file buffer and other data
+        socket.emit("uploadImage", {
+          file: fileBuffer,
+          fileName: file.name,
+          fileType: file.type,
+          userId,
+          token,
+        });
 
-      // console.log(response.data);
-      toast.success("Image successfully uploaded");
+        // Listen for the success event
+        socket.once("uploadImageSuccess", (data) => {
+          const imageUrl = URL.createObjectURL(file);
+          setImages((prevImages) => [...prevImages, imageUrl]);
+          toast.success("Image successfully uploaded");
+        });
+
+        // Listen for the error event
+        socket.once("uploadImageError", (error) => {
+          console.error("Error uploading file: ", error);
+          toast.error("Failed to upload image");
+        });
+      };
     } catch (error) {
       console.error("Error uploading file: ", error);
       toast.error("Failed to upload image");
     }
   };
-
+  //---------------------------------
   const handleFileSelection = (file) => {
     setSelectedFile(file);
   };

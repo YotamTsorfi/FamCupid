@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useUserProfile, useUser } from "../hooks";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Group from "./Group";
 import Modal from "react-modal";
 import socket from "../services/socket";
@@ -23,105 +22,135 @@ function Groups() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   //-------------------------
-  const fetchChatHistory = useCallback(async () => {
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_SOCKET_SERVER}/groups/groupHistory`,
-        { groupId: selectedGroup._id }
-      );
-      setChatHistory(response.data);
-    } catch (error) {
-      console.error("Failed to fetch chat history:", error);
-      setChatHistory([]);
-    }
+  const fetchChatHistory = useCallback(() => {
+    socket.emit("fetchGroupHistory", { groupId: selectedGroup._id });
   }, [selectedGroup]);
-  //-------------------------
-
+  //------------------------------------
   useEffect(() => {
     if (selectedGroup) {
       fetchChatHistory();
     }
-  }, [selectedGroup, fetchChatHistory]);
 
+    socket.on("groupHistoryResponse", (data) => {
+      setChatHistory(data);
+    });
+
+    socket.on("groupHistoryError", (error) => {
+      console.error("Failed to fetch chat history:", error);
+      setChatHistory([]);
+    });
+
+    return () => {
+      socket.off("groupHistoryResponse");
+      socket.off("groupHistoryError");
+    };
+  }, [selectedGroup, fetchChatHistory]);
   //-------------------------
   useEffect(() => {
     const handleGroupMessage = (message) => {
-      // console.log("Received group message From Server:", message);
-
       if (selectedGroup && message.groupId === selectedGroup._id) {
         setChatHistory((prevHistory) => [...prevHistory, message]);
-        setIsModalOpen(true); // Open the modal when a message is received
+        setIsModalOpen(true);
       }
     };
-
     socket.on("group_message", handleGroupMessage);
-
     // Clean up the event listener on component unmount
     return () => {
       socket.off("group_message", handleGroupMessage);
     };
-  }, [selectedGroup]); // Add selectedGroup to the dependency array
-
+  }, [selectedGroup]);
   //-------------------------
   useEffect(() => {
-    // Fetch all users from the database
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/users`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+    const handleLeaveGroup = (data) => {
+      if (userId == data.userId) {
+        setSelectedGroup(null);
+        handleCloseModal();
+
+        setGroups((prevGroups) =>
+          prevGroups.filter((group) => group._id !== data.updatedGroup._id)
         );
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to fetch users");
       }
+
+      if (
+        userId != data.userId &&
+        selectedGroup &&
+        selectedGroup._id == data.updatedGroup._id
+      ) {
+        setGroups((prevGroups) =>
+          prevGroups.map((group) =>
+            group._id === data.updatedGroup._id ? data.updatedGroup : group
+          )
+        );
+        setSelectedGroup(data.updatedGroup);
+      }
+    };
+    socket.on("leave_group", handleLeaveGroup);
+    return () => {
+      socket.off("leave_group", handleLeaveGroup);
+    };
+  }, [selectedGroup, userId]);
+  //-------------------------
+  useEffect(() => {
+    const fetchUsers = () => {
+      socket.emit("fetchUsers");
     };
 
     fetchUsers();
-  }, [token]);
+
+    socket.on("usersResponse", (data) => {
+      setUsers(data);
+    });
+
+    socket.on("usersError", (error) => {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    });
+
+    return () => {
+      socket.off("usersResponse");
+      socket.off("usersError");
+    };
+  }, []);
   //-------------------------
   useEffect(() => {
-    // Fetch all groups from the database
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SOCKET_SERVER}/groups`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        // Filter groups to only include those the user is a member of
-        const userGroups = response.data.filter((group) =>
-          group.members.some((member) => member._id === userId)
-        );
-        setGroups(userGroups);
-      } catch (error) {
-        console.error("Error fetching groups:", error);
-        toast.error("Failed to fetch groups");
-      }
+    const fetchGroups = () => {
+      socket.emit("fetchGroups");
     };
 
     fetchGroups();
-  }, [token, userId]);
+
+    socket.on("groupsResponse", (data) => {
+      const userGroups = data.filter((group) =>
+        group.members.some((member) => member._id === userId)
+      );
+      setGroups(userGroups);
+    });
+
+    socket.on("groupsError", (error) => {
+      console.error("Error fetching groups:", error);
+      toast.error("Failed to fetch groups");
+    });
+
+    return () => {
+      socket.off("groupsResponse");
+      socket.off("groupsError");
+    };
+  }, [userId]);
   //-------------------------
   useEffect(() => {
     socket.on("new_group", (newGroup) => {
-      if (newGroup.members.some((member) => member._id === userId)) {
-        setGroups((prevGroups) => {
-          if (!prevGroups.some((group) => group._id === newGroup._id)) {
-            return [...prevGroups, newGroup];
-          }
-          return prevGroups;
-        });
-      }
+      setGroups((prevGroups) => {
+        // Check if the new group already exists in the list
+        if (!prevGroups.some((group) => group._id === newGroup._id)) {
+          return [...prevGroups, newGroup];
+        }
+        return prevGroups;
+      });
+
+      toast.success("Group created successfully");
+      setGroupName("");
+      setSelectedUsers([]);
+      setIsModalOpen(false);
     });
 
     return () => {
@@ -132,12 +161,13 @@ function Groups() {
   useEffect(() => {
     socket.on("delete_group", (deletedGroupId) => {
       setGroups((prevGroups) =>
-        prevGroups.filter((group) => group._id !== deletedGroupId)
+        prevGroups.filter((group) => group._id !== deletedGroupId._id)
       );
-
       // Close the selected group if it is the one being deleted
-      if (selectedGroup && selectedGroup._id === deletedGroupId) {
+      if (selectedGroup && selectedGroup._id === deletedGroupId._id) {
+        setSelectedGroup(null);
         handleCloseModal();
+        toast.success("Group deleted successfully");
       }
     });
 
@@ -148,28 +178,7 @@ function Groups() {
   //-------------------------
   const handleCreateGroup = async () => {
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_SOCKET_SERVER}/groups`,
-        { groupName, members: selectedUsers },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        toast.success("Group created successfully");
-        setGroupName("");
-        setSelectedUsers([]);
-        setIsModalOpen(false);
-        setGroups([...groups, response.data]);
-
-        // Emit the new group event
-        socket.emit("new_group", response.data);
-      } else {
-        throw new Error("Failed to create group");
-      }
+      socket.emit("new_group", { groupName, members: selectedUsers });
     } catch (error) {
       console.error("Error creating group:", error);
       toast.error("Failed to create group");
@@ -196,15 +205,6 @@ function Groups() {
   //-------------------------
   const handleDeleteGroup = async (groupId) => {
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_SOCKET_SERVER}/groups/${groupId}`
-      );
-      setGroups(groups.filter((group) => group._id !== groupId));
-      setSelectedGroup(null);
-      handleCloseModal();
-      toast.success("Group deleted successfully");
-
-      // Emit the delete group event
       socket.emit("delete_group", groupId);
     } catch (error) {
       console.error("Error deleting group:", error);
@@ -213,29 +213,12 @@ function Groups() {
   //-------------------------
   const handleLeaveGroup = async (groupId) => {
     try {
-      const response = await axios.patch(
-        `${process.env.REACT_APP_SOCKET_SERVER}/groups/${groupId}/leave`,
-        { userId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setSelectedGroup(null);
-        handleCloseModal();
-        setGroups(groups.filter((group) => group._id !== groupId));
-      } else {
-        throw new Error("Failed to leave group");
-      }
+      socket.emit("leave_group", { userId, groupId });
     } catch (error) {
       console.error("Error leaving group:", error);
       toast.error("Failed to leave group");
     }
   };
-
   //-------------------------
   const handleMsgData = (data) => {
     const message = {
@@ -245,7 +228,6 @@ function Groups() {
       content: data.content,
       timestamp: new Date().toISOString(),
     };
-
     socket.emit("group_message", message);
   };
   //-------------------------

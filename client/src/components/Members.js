@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Member from "./Member";
 import UserDetails from "./UserDetails";
 import ChatModal from "./ChatModal";
-import axios from "axios";
 import "./css/Members.css";
 import {
   login,
@@ -12,6 +11,7 @@ import {
   onEvent,
   offEvent,
 } from "../services/socketServices";
+import socket from "../services/socket";
 
 function Members() {
   const { userId, username, photoUrl, bio } = useUser();
@@ -26,19 +26,23 @@ function Members() {
   useUserProfile();
   const navigate = useNavigate();
   //---------------------------------------------------------
-  const fetchChatHistory = async (senderId, receiverId) => {
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_SOCKET_SERVER}/chat`,
-        { senderId, receiverId }
-      );
-      setChatHistory(response.data);
-    } catch (error) {
+  const fetchChatHistory = (senderId, receiverId) => {
+    socket.emit("getChatHistory", { senderId, receiverId });
+
+    socket.on("chatHistory", (data) => {
+      setChatHistory(data);
+    });
+
+    socket.on("error", (error) => {
       console.error("Failed to fetch chat history:", error);
       setChatHistory([]);
-    }
-  };
+    });
 
+    return () => {
+      socket.off("chatHistory");
+      socket.off("error");
+    };
+  };
   //---------------------------------------------------------
   const handleNotificationClick = (senderId) => {
     setRecipientUser(onlineUsers.find((user) => user.id === senderId));
