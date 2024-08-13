@@ -62,7 +62,8 @@ function Groups() {
   //-------------------------
   useEffect(() => {
     const handleLeaveGroup = (data) => {
-      if (userId == data.userId) {
+      // if (userId == data.userId) {
+      if (userId === data.userId) {
         setSelectedGroup(null);
         handleCloseModal();
 
@@ -72,9 +73,11 @@ function Groups() {
       }
 
       if (
-        userId != data.userId &&
+        // userId != data.userId &&
+        userId !== data.userId &&
         selectedGroup &&
-        selectedGroup._id == data.updatedGroup._id
+        selectedGroup._id === data.updatedGroup._id
+        // selectedGroup._id == data.updatedGroup._id
       ) {
         setGroups((prevGroups) =>
           prevGroups.map((group) =>

@@ -2,7 +2,6 @@ import { useUserProfile, useUser } from "../hooks";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import socket from "../services/socket";
 import "./css/Home.css";
 
 function Home() {
