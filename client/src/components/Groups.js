@@ -178,6 +178,19 @@ function Groups() {
   //-------------------------
   const handleCreateGroup = async () => {
     try {
+      // Validate groupName
+      if (!groupName || groupName.trim() === "") {
+        toast.error("Group name cannot be empty");
+        return;
+      }
+
+      // Validate selectedUsers
+      if (!Array.isArray(selectedUsers) || selectedUsers.length === 0) {
+        toast.error("Please select at least one member");
+        return;
+      }
+
+      // Emit new_group event
       socket.emit("new_group", { groupName, members: selectedUsers });
     } catch (error) {
       console.error("Error creating group:", error);
