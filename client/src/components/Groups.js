@@ -249,7 +249,7 @@ function Groups() {
   //-------------------------
   return (
     <div>
-      <div className="userName">Logged in as: {username}</div>
+      <div className="userName">Hi, {username}</div>
       <div className="header-container">
         <button className="go-home-button" onClick={() => navigate("/home")}>
           Home

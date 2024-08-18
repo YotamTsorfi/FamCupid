@@ -165,7 +165,7 @@ function Members() {
   //---------------------------------------------------------
   return (
     <div>
-      <div className="user-identification">Logged in as: {username}</div>
+      <div className="user-identification">Hi, {username}</div>
       <button className="go-home-button" onClick={() => navigate("/home")}>
         Home
       </button>
