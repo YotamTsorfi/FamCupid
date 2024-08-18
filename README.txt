@@ -20,3 +20,7 @@ System Connection
 The connection to the system is made via API calls, 
 but all communication—private messages between users, group messages, 
 and all other operations—are implemented using WebSocket.
+
+
+Project Short Clip
+https://youtu.be/hPE_o1Ux20M
